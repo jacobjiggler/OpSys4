@@ -2,4 +2,7 @@ import sys, copy, multiprocessing
 
 class Client:
     def __init__ (self):
-        return;
+        self.connected = 0
+
+if __name__ == '__main__':
+    Client()
