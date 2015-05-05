@@ -3,8 +3,9 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <errno.h>
-
+#include <arpa/inet.h>
 #include <netinet/in.h>
+#include <netdb.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
@@ -19,12 +20,13 @@ void *connection_handler(void *socket_desc)
 {
     //Get the socket descriptor
     int sock = *(int*)socket_desc;
+    //printf("%d \n", sock);
     int read_size = 0;
     char *message , client_message[2000];
-     
+
     //Send some messages to the client
     message = "Received incoming connection from <client-hostname>\n";
-    write(sock , message , strlen(message));
+
 
     //Receive a message from client
     while( (read_size = recv(sock , client_message , 2000 , 0)) > 0 )
@@ -91,6 +93,9 @@ int main(int argc , char *argv[])
             perror("failed to create thread");
             return 1;
         }
+        char str[INET_ADDRSTRLEN];
+        printf("Received incoming connection from %s \n", inet_ntop(AF_INET, &client.sin_addr.s_addr, str, INET_ADDRSTRLEN));
+
 	}
 	if (client_sock < 0)
     {
