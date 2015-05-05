@@ -23,10 +23,7 @@ void *connection_handler(void *socket_desc)
     char *message , client_message[2000];
      
     //Send some messages to the client
-    message = "Greetings! I am your connection handler\n";
-    write(sock , message , strlen(message));
-     
-    message = "Now type something and i shall repeat what you type \n";
+    message = "Received incoming connection from <client-hostname>\n";
     write(sock , message , strlen(message));
      
     //Receive a message from client
@@ -35,8 +32,14 @@ void *connection_handler(void *socket_desc)
         //end of string marker
 		client_message[read_size] = '\0';
 		
+		printf("Rcvd: %s", client_message);
+		
 		//Send the message back to client
-        write(sock , client_message , strlen(client_message));
+        write(sock , "AWK\n" , strlen("AWK\n"));
+		
+		puts("Sent: ACK");
+		fflush(stdout);
+		
 		
 		//clear the message buffer
 		memset(client_message, 0, 2000);
@@ -44,7 +47,7 @@ void *connection_handler(void *socket_desc)
      
     if(read_size == 0)
     {
-        puts("Client disconnected");
+        puts("Client closed it's socket....terminating");
         fflush(stdout);
     }
     else if(read_size == -1)
@@ -70,14 +73,22 @@ int main(int argc , char *argv[])
 	server.sin_addr.s_addr = INADDR_ANY;
 	server.sin_port = htons(8765);
 	
-	listen(socket_desc, 3);
+	/* bind to a specific (OS-assigned) port number */
+    if ( bind( socket_desc, (struct sockaddr *)&server, sizeof( server ) ) == -1 )
+    {
+		perror( "bind() failed" );
+		return EXIT_FAILURE;
+    }
+	puts("bind done");
+	
+	listen(socket_desc, 5);
 	c = sizeof(struct sockaddr_in);
 	pthread_t thread_id;
 	while( (client_sock = accept(socket_desc, (struct sockaddr *)&client, (socklen_t*)&c)) )
 	{
 	    if( pthread_create( &thread_id , NULL ,  connection_handler , (void*) &client_sock) < 0)
         {
-            perror("could not create thread");
+            perror("failed to create thread");
             return 1;
         }	
 	}

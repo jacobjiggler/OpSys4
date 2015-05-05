@@ -4,6 +4,7 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <stdint.h>
+#define MAXBUF 10*1024
 
 int main(int argc , char *argv[])
 {
@@ -16,9 +17,9 @@ int main(int argc , char *argv[])
     sock = socket(AF_INET , SOCK_STREAM , 0);
     if (sock == -1)
     {
-        printf("Could not create socket");
+        printf("creating socket failed");
     }
-    puts("Socket created");
+    puts("Socket created sucessfully");
 
     server.sin_addr.s_addr = inet_addr("127.0.0.1");
     server.sin_family = AF_INET;
@@ -36,7 +37,7 @@ int main(int argc , char *argv[])
     //keep communicating with server
     while((len = recv(sock, server_reply, sizeof(server_reply), 0)) > 0)
     {
-        printf("Server reply: %.*s", len, server_reply);
+        printf("%.*s", len, server_reply);
 
         printf("Enter message : ");
         if (fgets(message, sizeof(message), stdin) == NULL)
