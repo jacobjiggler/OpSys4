@@ -15,18 +15,24 @@
 #include <dirent.h>
 
 #define BUFFER_SIZE 1024
+#define PORT 8765
+#define FRAME_SIZE 1024
+#define FRAMES = 32
+#define FRAMES_PER_FILE 4
 
 void *connection_handler(void *socket_desc)
 {
+
+
+
+
     //Get the socket descriptor
     int sock = *(int*)socket_desc;
     //printf("%d \n", sock);
     int read_size = 0;
-    char *message , client_message[2000];
+    char client_message[2000];
 
     //Send some messages to the client
-    message = "Received incoming connection from <client-hostname>\n";
-
 
     //Receive a message from client
     while( (read_size = recv(sock , client_message , 2000 , 0)) > 0 )
@@ -73,7 +79,7 @@ int main(int argc , char *argv[])
 
 	server.sin_family = AF_INET;
 	server.sin_addr.s_addr = INADDR_ANY;
-	server.sin_port = htons(8765);
+	server.sin_port = htons(PORT);
 
 	/* bind to a specific (OS-assigned) port number */
     if ( bind( socket_desc, (struct sockaddr *)&server, sizeof( server ) ) == -1 )
