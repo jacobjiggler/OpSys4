@@ -33,88 +33,90 @@ struct page {
 
 void *connection_handler(void *socket_desc)
 {
-  //(PARSE OUT COMMAND OR RETURN ERROR)
-    //if !string compare(client_message(first 4 char) "DIR\n")
-      //call dir function
-
-
-    //elseif !string compare(client_message(first 6 char) "STORE ")
-      //if \n in client message
-        //save index of \n
-      //else
-        //printf("ERROR: Incorrect Syntax For COMMAND\n");
-        //return
-      //if there is a digit before \n
-        //store index of first digit in string of digits
-        //convert num to int and save as bytes
-      //else
-        //printf("ERROR: Incorrect Syntax For COMMAND\n");
-        //return
-      //save filename(dont forget about the space between filename and bytes)
-      //either create and call a store function or write it here
-
-
-    //else if !string compare(client_message(first 5 char) "READ ")
-      //if \n in client message
-        //save index of \n
-      //else
-        //printf("ERROR: Incorrect Syntax For COMMAND\n");
-        //return
-      //if there is a digit before \n
-        //store index of first digit in string of digits
-        //convert num to int and save as length
-      //else
-        //printf("ERROR: Incorrect Syntax For COMMAND\n");
-        //return
-      //if there is a digit before index of previous digits
-        //store index of first digit in string of digits
-        //convert num to int and save as byteoffset
-      //else
-        //printf("ERROR: Incorrect Syntax For COMMAND\n");
-        //return
-      //save filename (dont foget the space)
-      //either create and call a READ function or write it here
-
-
-    //else if !string compare(client_message(first 5 char) "DELETE ")
-      //if \n in client message
-        //save index of \n
-      //else
-        //printf("ERROR: Incorrect Syntax For COMMAND\n");
-        //return
-      //if there is a char before \n
-        //save filename
-      //else
-        //printf("ERROR: Incorrect Syntax For COMMAND\n");
-        //return
-      //call delete function
-
-
-    //else
-      //printf("ERROR: Incorrect Syntax For COMMAND\n");
-      //return
-
-
-
-
 
 
     //Get the socket descriptor
     int sock = *(int*)socket_desc;
-    int read_size = 0;
-    char client_message[2000];
+
 
     //Send some messages to the client
 
-    //Receive a message from client
-    while( (read_size = recv(sock , client_message , 2000 , 0)) > 0 )
-    {
-        //end of string marker
-		client_message[read_size] = '\0';
+    FILE *command = fdopen(sock, "r");
+    write(sock , "HALLO!\n" , strlen("HALLO!\n"));
 
-		printf("Rcvd: %s", client_message);
 
-		//Send the message back to client
+
+    //(PARSE OUT COMMAND OR RETURN ERROR)(USE FGETS)
+    while(1){
+      char temp[PATH_MAX + 1];
+      if (fgets(temp, PATH_MAX+ 1, command) != NULL){
+        printf("%s \n", temp);
+      }
+      else {
+        puts("Client closed it's socket....terminating");
+        fflush(stdout);
+        return 0;
+      }
+
+      //if !strcmp(client_message(first 4 char) "DIR\n")
+        //call dir function
+
+
+      //elseif !string compare(client_message(first 6 char) "STORE ")
+        //if \n in client message
+          //save index of \n
+        //else
+          //printf("ERROR: Incorrect Syntax For COMMAND\n");
+          //return
+        //if there is a digit before \n
+          //store index of first digit in string of digits
+          //convert num to int and save as bytes
+        //else
+          //printf("ERROR: Incorrect Syntax For COMMAND\n");
+          //return
+        //save filename(dont forget about the space between filename and bytes)
+        //either create and call a store function or write it here
+
+
+      //else if !string compare(client_message(first 5 char) "READ ")
+        //if \n in client message
+          //save index of \n
+        //else
+          //printf("ERROR: Incorrect Syntax For COMMAND\n");
+          //return
+        //if there is a digit before \n
+          //store index of first digit in string of digits
+          //convert num to int and save as length
+        //else
+          //printf("ERROR: Incorrect Syntax For COMMAND\n");
+          //return
+        //if there is a digit before index of previous digits
+          //store index of first digit in string of digits
+          //convert num to int and save as byteoffset
+        //else
+          //printf("ERROR: Incorrect Syntax For COMMAND\n");
+          //return
+        //save filename (dont foget the space)
+        //either create and call a READ function or write it here
+
+
+      //else if !string compare(client_message(first 5 char) "DELETE ")
+        //if \n in client message
+          //save index of \n
+        //else
+          //printf("ERROR: Incorrect Syntax For COMMAND\n");
+          //return
+        //if there is a char before \n
+          //save filename
+        //else
+          //printf("ERROR: Incorrect Syntax For COMMAND\n");
+          //return
+        //call delete function
+
+
+      //else
+        //printf("ERROR: Incorrect Syntax For COMMAND\n");
+        //return
         write(sock , "AWK\n" , strlen("AWK\n"));
 
 		puts("Sent: ACK");
@@ -122,17 +124,7 @@ void *connection_handler(void *socket_desc)
 
 
 		//clear the message buffer
-		memset(client_message, 0, 2000);
-    }
-
-    if(read_size == 0)
-    {
-        puts("Client closed it's socket....terminating");
-        fflush(stdout);
-    }
-    else if(read_size == -1)
-    {
-        perror("recv failed");
+		memset(temp, 0, 2000);
     }
 
     return 0;
