@@ -50,7 +50,8 @@ void *connection_handler(void *socket_desc)
     while(1){
       char temp[PATH_MAX + 1];
       if (fgets(temp, PATH_MAX+ 1, command) != NULL){
-        printf("%s \n", temp);
+        char dest[6];
+        strncpy(dest,temp,6);
         if (strcmp(temp, "DIR\n")==0){
           printf("Command DIR Recognized\n");
           //call dir function
@@ -75,11 +76,9 @@ void *connection_handler(void *socket_desc)
               if (!strcmp(ent->d_name,"..") || !strcmp(ent->d_name,".")){
                 continue;
               }
-              printf ("%s\n", ent->d_name);
               strcat(output, ent->d_name);
               strcat(output, "\n");
             }
-            printf("%s",output);
             write(sock , output , strlen(output));
             closedir (dir);
 
@@ -89,15 +88,10 @@ void *connection_handler(void *socket_desc)
           }
         }
 
-        //char dest[6];
-        //strncpy(dest,temp,6);
-        //elseif !strcmp(dest,"STORE ")
-          //if \n in client message
-            //save index of \n
-          //else
-            //printf("ERROR: Incorrect Syntax For COMMAND\n");
-            //return
-          //if there is a digit before \n
+        else if (!strcmp(dest,"STORE ")){
+          //for now
+          continue;
+          //if there is a digit before end
             //store index of first digit in string of digits
             //convert num to int and save as bytes
           //else
@@ -106,14 +100,9 @@ void *connection_handler(void *socket_desc)
           //save filename(dont forget about the space between filename and bytes)
           //either create and call a store function or write it here
 
-
+        }
         //else if !string compare(client_message(first 5 char) "READ ")
-          //if \n in client message
-            //save index of \n
-          //else
-            //printf("ERROR: Incorrect Syntax For COMMAND\n");
-            //return
-          //if there is a digit before \n
+          //if there is a digit before end
             //store index of first digit in string of digits
             //convert num to int and save as length
           //else
@@ -130,11 +119,6 @@ void *connection_handler(void *socket_desc)
 
 
         //else if !string compare(client_message(first 5 char) "DELETE ")
-          //if \n in client message
-            //save index of \n
-          //else
-            //printf("ERROR: Incorrect Syntax For COMMAND\n");
-            //return
           //if there is a char before \n
             //save filename
           //else
