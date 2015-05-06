@@ -13,6 +13,7 @@
 #include <arpa/inet.h>
 #include <pthread.h>
 #include <dirent.h>
+#include <ctype.h>
 
 #define BUFFER_SIZE 1024
 #define PORT 8765
@@ -90,7 +91,9 @@ void *connection_handler(void *socket_desc)
 
         else if (!strcmp(dest,"STORE ")){
           //for now
-          continue;
+          printf("Command Store Recognized \n");
+          int length = strlen(temp);
+
           //if there is a digit before end
             //store index of first digit in string of digits
             //convert num to int and save as bytes
