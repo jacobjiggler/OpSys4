@@ -51,11 +51,47 @@ void *connection_handler(void *socket_desc)
       char temp[PATH_MAX + 1];
       if (fgets(temp, PATH_MAX+ 1, command) != NULL){
         printf("%s \n", temp);
-        //if !strcmp(client_message(first 4 char) "DIR\n")
+        if (strcmp(temp, "DIR\n")==0){
+          printf("Command DIR Recognized\n");
           //call dir function
 
+          DIR *dir;
+          struct dirent *ent;
+          char dirname[] = "StagingArea";
+          if ((dir = opendir (dirname)) != NULL) {
+            /* print all the files and directories within directory */
+            int count = 0;
+            while ((ent = readdir (dir)) != NULL) {
+              if (!strcmp(ent->d_name,"..") || !strcmp(ent->d_name,".")){
+                continue;
+              }
+              count++;
+            }
+            char output[1000];
+            sprintf(output, "%d\n", count);
+            closedir (dir);
+            dir = opendir (dirname);
+            while ((ent = readdir (dir)) != NULL) {
+              if (!strcmp(ent->d_name,"..") || !strcmp(ent->d_name,".")){
+                continue;
+              }
+              printf ("%s\n", ent->d_name);
+              strcat(output, ent->d_name);
+              strcat(output, "\n");
+            }
+            printf("%s",output);
+            write(sock , output , strlen(output));
+            closedir (dir);
 
-        //elseif !string compare(client_message(first 6 char) "STORE ")
+          } else {
+            /* could not open directory */
+            printf ("couldn't open directory \n");
+          }
+        }
+
+        //char dest[6];
+        //strncpy(dest,temp,6);
+        //elseif !strcmp(dest,"STORE ")
           //if \n in client message
             //save index of \n
           //else
@@ -107,9 +143,10 @@ void *connection_handler(void *socket_desc)
           //call delete function
 
 
-        //else
-          //printf("ERROR: Incorrect Syntax For COMMAND\n");
-          //return
+        else{
+          printf("ERROR: Incorrect Syntax For COMMAND\n");
+          write(sock , "ERROR: Incorrect Syntax For COMMAND\n" , strlen("ERROR: Incorrect Syntax For COMMAND\n"));
+        }
       }
       else {
         puts("Client closed it's socket....terminating");
