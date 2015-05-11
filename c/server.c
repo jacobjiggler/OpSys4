@@ -91,9 +91,11 @@ void *connection_handler(void *socket_desc)
 
         else if (!strcmp(dest,"STORE ")){
           //for now
-          printf("Command Store Recognized \n");
-          int length = strlen(temp);
-
+		  printf("Command Store Recognized \n");
+		  char file_line[BUFFER_SIZE];
+          fgets(file_line, sizeof(file_line), command);
+		  printf("%s\n",file_line);
+		  write(sock , "FILE Read" , strlen("FILE Read"));
           //if there is a digit before end
             //store index of first digit in string of digits
             //convert num to int and save as bytes
