@@ -61,6 +61,7 @@ int main(int argc , char *argv[])
 			pos = 6;
 			while(message[pos] != ' '){
 				file_name[f_pos] = message[pos];
+				//putchar(file_name[f_pos]);
 				f_pos++;
 				pos++;
 			}
@@ -70,11 +71,11 @@ int main(int argc , char *argv[])
 				b_pos++;
 				pos++;				
 			}
-			printf("%d\n", f_pos);
-			printf("%d\n", b_pos);
+			printf("f_pos %d\n", f_pos);
+			printf("b_pos %d\n", b_pos);
 			file_name[f_pos] = '\0';
-			file_name[b_pos] = '\0';
-			FILE *fp = fopen("a.txt", "rb");
+			bytes_size[b_pos] = '\0';
+			FILE *fp = fopen(file_name, "rb");
 			if(fp == NULL){
 				puts("error opening file:");
 			}
