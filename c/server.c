@@ -158,11 +158,13 @@ void *connection_handler(void *socket_desc)
           //call delete function
 
 
-        else{
-          printf("ERROR: Incorrect Syntax For COMMAND\n");
-          write(sock , "ERROR: Incorrect Syntax For COMMAND\n" , strlen("ERROR: Incorrect Syntax For COMMAND\n"));
-        }
+
       }
+      else{
+        printf("ERROR: Incorrect Syntax For COMMAND\n");
+        write(sock , "ERROR: Incorrect Syntax For COMMAND\n" , strlen("ERROR: Incorrect Syntax For COMMAND\n"));
+      }
+    }
       else {
         puts("Client closed it's socket....terminating");
         fflush(stdout);
