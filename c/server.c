@@ -91,11 +91,37 @@ void *connection_handler(void *socket_desc)
 
         else if (!strcmp(dest,"STORE ")){
           //for now
-		  printf("Command Store Recognized \n");
-		  char file_line[BUFFER_SIZE];
-          fgets(file_line, sizeof(file_line), command);
-		  printf("%s\n",file_line);
-		  write(sock , "FILE Read" , strlen("FILE Read"));
+          int length = strlen(temp);
+          char * word;
+          char * unused;
+
+          word = strtok_r(temp, " ", &unused );
+          printf("%s\n",word);
+          int numBytes = atoi(strtok_r( NULL, " \n", &unused ));
+          //Check if file exists
+          char* fname = strcat(".storage/", word);
+          if( access( fname, F_OK ) != -1 ) {
+              // file exists
+              perror("FILE EXISTS\n");
+          } else {
+              // file doesn't exist
+              // create the file in write mode and start copying
+              FILE * fptr = fopen(fname, "w");
+              if(fptr == NULL){
+                perror("Error opening file for writing\n");
+                continue;
+              }
+              else{
+                //Create folder if it does not exist already
+                mkdir(".storage", 0777);
+                fwrite(unused,sizeof(char), numBytes, fptr);
+              }
+              fclose(fptr);
+    		  printf("Command Store Recognized \n");
+    		  char file_line[BUFFER_SIZE];
+              fgets(file_line, sizeof(file_line), command);
+    		  printf("%s\n",file_line);
+    		  write(sock , "FILE Read" , strlen("FILE Read"));
           //if there is a digit before end
             //store index of first digit in string of digits
             //convert num to int and save as bytes
