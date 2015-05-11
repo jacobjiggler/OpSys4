@@ -53,6 +53,9 @@ void *connection_handler(void *socket_desc)
       if (fgets(temp, PATH_MAX+ 1, command) != NULL){
         char dest[6];
         strncpy(dest,temp,6);
+
+        //DIR COMMAND
+        //__________________________________________________________
         if (strcmp(temp, "DIR\n")==0){
           printf("Command DIR Recognized\n");
           //call dir function
@@ -85,14 +88,43 @@ void *connection_handler(void *socket_desc)
 
           } else {
             /* could not open directory */
-            printf ("couldn't open directory \n");
+            perror("couldn't open directory \n");\
+            continue;
           }
         }
 
-        else if (!strcmp(dest,"STORE ")){
+        else if (!strcmp(temp, "STORE ")){
           //for now
-          printf("Command Store Recognized \n");
+          printf("Command STORE Recognized \n");
           int length = strlen(temp);
+          char * word;
+          char * unused;
+
+          word = strtok_r(temp, " ", &unused );
+          printf("%s\n",word);
+          int numBytes = atoi(strtok_r( NULL, " \n", &unused ));
+          //Check if file exists
+          char* fname = strcat(".storage/", word);
+          if( access( fname, F_OK ) != -1 ) {
+              // file exists
+              perror("FILE EXISTS\n");
+          } else {
+              // file doesn't exist
+              // create the file in write mode and start copying
+              FILE * fptr = fopen(fname, "w");
+              if(fptr == NULL){
+                perror("Error opening file for writing\n");
+                continue;
+              }
+              else{
+                //Create folder if it does not exist already
+                mkdir(".storage", 0777);
+                fwrite(unused,sizeof(char), numBytes, fptr);
+              }
+              fclose(fptr);
+          }
+
+
 
           //if there is a digit before end
             //store index of first digit in string of digits
