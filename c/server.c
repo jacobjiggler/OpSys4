@@ -66,7 +66,7 @@ void *connection_handler(void *socket_desc)
 
           DIR *dir;
           struct dirent *ent;
-          char dirname[] = ".storage";
+          char * dirname = ".storage";
           if ((dir = opendir (dirname)) != NULL) {
             /* print all the files and directories within directory */
             int count = 0;
