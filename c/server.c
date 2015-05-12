@@ -43,6 +43,15 @@ struct page {
   time_t lastEdited;
 };
 
+
+//declare memory array here(32 slots with 1024 bits)
+  // allocate 32,768 with calloc
+  //then turn into array of char of that size
+char* memory;
+
+//declare page table here (32 slots filled with custom struct page)
+struct page pageTable[32];
+
 int findLeastRecentyUsed (struct page* pageTable){
   //RETURNS -1 as error case
   const int tableSize = 32;
@@ -90,13 +99,7 @@ int writeToClient(int index, int offset, int numBytes, int sock){
 }
 
 
-//declare memory array here(32 slots with 1024 bits)
-  // allocate 32,768 with calloc
-  //then turn into array of char of that size
-char* memory;
 
-//declare page table here (32 slots filled with custom struct page)
-struct page pageTable[32];
 
 void *connection_handler(void *socket_desc)
 {
@@ -304,6 +307,8 @@ void *connection_handler(void *socket_desc)
         //use preexisting page if possible to write to beginning bytes
         localtime(&pageTable[pageNum].lastEdited);
         index = 0;
+        writeToClient(pageNum, byteOffset, int numBytes, int sock);
+
         //write message of last FirstPageSize bytes to client(needs a bunch of code between these 2 lines)
         //print stuff
 			}
