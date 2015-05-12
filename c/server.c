@@ -35,13 +35,61 @@
 
 //declare mutex locks up here
 
+//struct to hold page info
+struct page {
+  char filename[1000];
+  int pageNum;
+  //Will hold the number in which it was edited
+  time_t lastEdited;
+};
 
+int findLeastRecentyUsed (struct page* pageTable){
+  //RETURNS -1 as error case
+  const int tableSize = 32;
+  time_t oldestTime;
+  int oldestIndex =0;
+  localtime(&oldestTime);
+  int i=0;
+  for(i=0; i< tableSize; i++){
+
+    if (pageTable[i].lastEdited < oldestTime){
+      oldestTime = pageTable[i].lastEdited;
+      oldestIndex =i;
+    }
+  }
+  return oldestIndex;
+}
+int checkForFileInPageTable(struct page* pageTable, char * filename){
+  //check if a page exists with same offset
+  const int tableSize = 32;
+  int i;
+  for(i =0; i< tableSize; i++){
+    if (strcmp(pageTable[i].filename,filename)){
+      localtime(&pageTable[i].lastEdited);
+      return i;
+    }
+  }
+  return -1;
+}
+int transferPage(int index, char * filename, int pageNum, char * buffer){
+
+  return -1;
+}
+
+
+//declare memory array here(32 slots with 1024 bits)
+  // allocate 32,768 with calloc
+  //then turn into array of char of that size
+char* memory;
+
+//declare page table here (32 slots filled with custom struct page)
+struct page pageTable[32];
 
 void *connection_handler(void *socket_desc)
 {
     //Get the socket descriptor
     int sock = *(int*)socket_desc;
-	
+
     //Send some messages to the client
 
     FILE *command = fdopen(sock, "r");
@@ -206,7 +254,7 @@ void *connection_handler(void *socket_desc)
           file_name[f_pos] = '\0';
           bytes_size[b_pos] = '\0';
           length[l_pos] = '\0';
-		  int byteOffset = atoi(bytes_size);
+		      int byteOffset = atoi(bytes_size);
           int readLength = atoi(length);
           char file_path[1000];
           memset(file_path,0,9);
@@ -224,36 +272,40 @@ void *connection_handler(void *socket_desc)
 
           }
 		  else{
-			if (flock(fileno(fptr), LOCK_SH)!=0){ 
+			if (flock(fileno(fptr), LOCK_SH)!=0){
 				puts("file lock not achieved");
 				continue;
 			}
 			struct stat st;
 			stat(file_path, &st);
 			int size = st.st_size;
-			int difference = offset % 1024;
-			firstPageSize = 1024 - difference;
-			if(firstPageSize > length){
-				firstPageSize = length;
+			int difference = byteOffset % 1024;
+			int firstPageSize = 1024 - difference;
+			if(firstPageSize > readLength){
+				firstPageSize = readLength;
 			}
 			struct page* frame[4];
 			int index;
-			if(checkForFileInPageTable(struct page* pageTable, char * filename)){ //use preexisting page if possible to write to beginning bytes
+      int pageNum = checkForFileInPageTable(pageTable, file_name);
+			if(pageNum != -1){
+        //use preexisting page if possible to write to beginning bytes
+        localtime(&pageTable[pageNum].lastEdited);
 				//update last edited
                 //index = 0
                 //write message of last FirstPageSize bytes to client(needs a bunch of code between these 2 lines)
                 //print stuff
 			}
-			else{ 
+			else{
               //update last edited
               //do page check and set page[0] then write bytes
               //pages[0] = right page
               //index = 1;
               //strcpy the whole 1024 bytes into memory
               //write message of last FirstPageSize bytes to client(needs a bunch of code between these 2 lines)
-              //print stuff			
-			}
-			
+              //print stuff
+
+}
+
           //check if exists
           //if it doesnt
             //[thread 134559232] Sent: ERROR NO SUCH FILE
@@ -308,6 +360,7 @@ void *connection_handler(void *socket_desc)
             //}
 		  flock(fileno(fptr), LOCK_UN);
 		  }
+    
 		}
 		else if(!strcmp(dest,"DELETE")){
 		  puts("Received DELETE");
@@ -342,56 +395,12 @@ void *connection_handler(void *socket_desc)
     return 0;
 }
 
-//struct to hold page info
-struct page {
-  char filename[1000];
-  int pageNum;
-  //Will hold the number in which it was edited
-  time_t lastEdited;
-};
 
-int findLeastRecentyUsed (struct page* pageTable){
-  //RETURNS -1 as error case
-  const int tableSize = 32;
-  time_t oldestTime;
-  int oldestIndex =0;
-  localtime(&oldestTime);
-  int i=0;
-  for(i=0; i< tableSize; i++){
 
-    if (pageTable[i].lastEdited < oldestTime){
-      oldestTime = pageTable[i].lastEdited;
-      oldestIndex =i;
-    }
-  }
-  return oldestIndex;
-}
-int checkForFileInPageTable(struct page* pageTable, char * filename){
-  //check if a page exists with same offset
-  const int tableSize = 32;
-  int i;
-  for(i =0; i< tableSize; i++){
-    if (strcmp(pageTable[i].filename,filename)){
-      localtime(&pageTable[i].lastEdited);
-      return i;
-    }
-  }
-  return -1;
-}
-int transferPage(int index, char * filename, int pageNum, char * buffer){
-
-  return -1;
-}
 
 int main(int argc , char *argv[])
 {
-  //declare memory array here(32 slots with 1024 bits)
-    // allocate 32,768 with calloc
-    //then turn into array of char of that size
-    char* memory = calloc(32,1024);
-
-  //declare page table here (32 slots filled with custom struct page)
-  struct page pageTable[32];
+  memory = calloc(32,1024);
 	int socket_desc , client_sock, c;
 	struct sockaddr_in server, client;
 	socket_desc = socket(AF_INET, SOCK_STREAM, 0);
