@@ -84,6 +84,10 @@ int transferPage(int index, char * filename, int pageNum, char * buffer){
   }
   return -1;
 }
+int writeToClient(int index, int offset, int numBytes, int sock){
+
+  return -1;
+}
 
 
 //declare memory array here(32 slots with 1024 bits)
@@ -299,10 +303,9 @@ void *connection_handler(void *socket_desc)
 			if(pageNum != -1){
         //use preexisting page if possible to write to beginning bytes
         localtime(&pageTable[pageNum].lastEdited);
-				//update last edited
-                //index = 0
-                //write message of last FirstPageSize bytes to client(needs a bunch of code between these 2 lines)
-                //print stuff
+        index = 0
+        //write message of last FirstPageSize bytes to client(needs a bunch of code between these 2 lines)
+        //print stuff
 			}
 			else{
               //update last edited
