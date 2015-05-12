@@ -1,3 +1,14 @@
+//testing of multiple commands/store commands
+//testing of partially correct commands(store without any data afterwards)
+//READ
+//DELETE
+//Page Table Operations
+
+
+
+
+
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
@@ -69,7 +80,7 @@ void *connection_handler(void *socket_desc)
             }
             char output[1000];
             sprintf(output, "%d\n", count);
-            closedir (dir);
+            closedir(dir);
             dir = opendir (dirname);
             while ((ent = readdir (dir)) != NULL) {
               if (!strcmp(ent->d_name,"..") || !strcmp(ent->d_name,".")){
@@ -79,7 +90,7 @@ void *connection_handler(void *socket_desc)
               strcat(output, "\n");
             }
             write(sock , output , strlen(output));
-            closedir (dir);
+            closedir(dir);
 
           } else {
             /* could not open directory */
@@ -111,52 +122,52 @@ void *connection_handler(void *socket_desc)
           bytes_size[b_pos] = '\0';
 
           //puts(file_name);
-    			//puts(bytes_size);
     			int numBytes = atoi(bytes_size);
           char file_path[1000];
+          memset(file_path,0,9);
           strcat(file_path, ".storage/");
           strcat(file_path, file_name);
+
           if( access( file_path, F_OK ) != -1 ) {
               // file exists
-              perror("FILE EXISTS\n");
+              write(sock , "Error: FILE EXISTS\n" , strlen("Error: FILE EXISTS\n"));
+              perror("Error: FILE EXISTS\n");
+
           } else {
-              // file doesn't exist
 
-
-
-              //save as blank and then f-lock it
 
               //start writing to file
               FILE * fptr = fopen(file_path, "w");
-              flock(fileno(fptr), LOCK_EX);
+
+
               if(fptr == NULL){
-                perror("Error opening file for writing\n");
+                write(sock , "Error: opening file for writing\n" , strlen("Error opening file for writing\n"));
+                perror("Error: opening file for writing\n");
+                printf("ERROR: %s\n", strerror(errno));
                 continue;
               }
               else{
-                //Create folder if it does not exist already
-                mkdir(".storage", 0777);
+                flock(fileno(fptr), LOCK_EX);
                 printf("Command Store Recognized \n");
                 char file_line[BUFFER_SIZE];
                 int itr = 0;
                 int runthrough = numBytes / BUFFER_SIZE;
                 while(itr < runthrough){
                   fread(file_line, sizeof(char), BUFFER_SIZE / sizeof(char), command);
-                  printf("%s\n",file_line);
-                  fwrite(file_line, sizeof(char), BUFFER_SIZE, fptr);
+                  //printf("%s\n",file_line);
+                  fwrite(file_line, sizeof(char), BUFFER_SIZE / sizeof(char), fptr);
                   puts("devided once");
                   itr++;
                 }
                 fread(file_line, sizeof(char), (numBytes % BUFFER_SIZE) / sizeof(char), command);
                 printf("%s\n",file_line);
-                fwrite(file_line, sizeof(char), (numBytes % BUFFER_SIZE), fptr);
-                puts("asdfsdf");
+                fwrite(file_line, sizeof(char), (numBytes % BUFFER_SIZE)/ sizeof(char), fptr);
               }
               fclose(fptr);
               flock(fileno(fptr), LOCK_UN);
 
 
-      		  write(sock , "FILE Read\n" , strlen("FILE Read"));
+      		  write(sock , "FILE Read\n" , strlen("FILE Read\n"));
             puts("sent: file read");
 
 
@@ -202,6 +213,7 @@ void *connection_handler(void *socket_desc)
     			int byteOffset = atoi(bytes_size);
           int readLength = atoi(length);
           char file_path[1000];
+          memset(file_path,0,9);
           strcat(file_path, ".storage/");
           strcat(file_path, file_name);
           //if there is a digit before end
@@ -233,7 +245,7 @@ void *connection_handler(void *socket_desc)
 
 
       else{
-        puts(temp);
+        printf("contents %s\n", temp);
         printf("ERROR: Incorrect Syntax For COMMAND\n");
         write(sock , "ERROR: Incorrect Syntax For COMMAND\n" , strlen("ERROR: Incorrect Syntax For COMMAND\n"));
       }
@@ -307,7 +319,8 @@ int main(int argc , char *argv[])
 		return EXIT_FAILURE;
     }
 	puts("bind done");
-
+  //Create folder if it does not exist already
+  mkdir(".storage", 0777);
 	listen(socket_desc, 5);
 	c = sizeof(struct sockaddr_in);
 	pthread_t thread_id;
