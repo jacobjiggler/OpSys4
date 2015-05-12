@@ -307,7 +307,7 @@ void *connection_handler(void *socket_desc)
         //use preexisting page if possible to write to beginning bytes
         localtime(&pageTable[pageNum].lastEdited);
         index = 0;
-        writeToClient(pageNum, byteOffset, int numBytes, int sock);
+        writeToClient(pageNum, byteOffset, firstPageSize, sock);
 
         //write message of last FirstPageSize bytes to client(needs a bunch of code between these 2 lines)
         //print stuff
