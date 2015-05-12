@@ -75,7 +75,7 @@ int transferPage(int index, char * filename, int pageNum, char * buffer){
   char * toOpen= ".storage/";
   strcat(toOpen,filename);
 
-  FILE* fptr = fopen(filename, 'r');
+  FILE* fptr = fopen(filename, "r");
   if (fptr==NULL){
     perror("ERROR Could not open file for reading\n");
   }
@@ -273,7 +273,7 @@ void *connection_handler(void *socket_desc)
           memset(file_path,0,9);
           strcat(file_path, ".storage/");
           strcat(file_path, file_name);
-		  FILE * fptr = fopen(file_path, "r");
+		  FILE * file = fopen(file_path, "r");
           //read function
           //add locks
           //wrote this when super tired need to recheck work
@@ -285,7 +285,7 @@ void *connection_handler(void *socket_desc)
 
           }
 		  else{
-			if (flock(fileno(fptr), LOCK_SH)!=0){
+			if (flock(fileno(file), LOCK_SH)!=0){
 				puts("file lock not achieved");
 				continue;
 			}
@@ -303,7 +303,7 @@ void *connection_handler(void *socket_desc)
 			if(pageNum != -1){
         //use preexisting page if possible to write to beginning bytes
         localtime(&pageTable[pageNum].lastEdited);
-        index = 0
+        index = 0;
         //write message of last FirstPageSize bytes to client(needs a bunch of code between these 2 lines)
         //print stuff
 			}
@@ -370,7 +370,7 @@ void *connection_handler(void *socket_desc)
                 //print stuff
                 //index++
             //}
-		  flock(fileno(fptr), LOCK_UN);
+		  flock(fileno(file), LOCK_UN);
 		  }
 
 		}
