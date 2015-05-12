@@ -211,7 +211,7 @@ void *connection_handler(void *socket_desc)
           file_name[f_pos] = '\0';
           bytes_size[b_pos] = '\0';
           length[l_pos] = '\0';
-    			int byteOffset = atoi(bytes_size);
+		  int byteOffset = atoi(bytes_size);
           int readLength = atoi(length);
           char file_path[1000];
           memset(file_path,0,9);
@@ -220,7 +220,23 @@ void *connection_handler(void *socket_desc)
           //read function
           //add locks
           //wrote this when super tired need to recheck work
+		  if( access( file_path, F_OK ) != -1 ) {
+            // file exists
+			printf("[thread %lu] Sent: ERROR NO SUCH FILE\n",(unsigned long)pthread_self());
+            write(sock , "Error: NO SUCH FILE\n" , strlen("Error: NO SUCH FILE\n"));
+            perror("Error: NO SUCH FILE\n");
 
+          }
+		  else{
+			if (flock(fileno(fptr), LOCK_SH)!=0) 
+				puts("file lock not achieved");
+				continue;
+			}
+			struct stat st;
+			stat(file_path, &st);
+			size = st.st_size;
+			
+		  }
           //check if exists
           //if it doesnt
             //[thread 134559232] Sent: ERROR NO SUCH FILE
@@ -273,6 +289,7 @@ void *connection_handler(void *socket_desc)
                 //print stuff
                 //index++
             //}
+		  flock(fileno(fptr), LOCK_UN);
 
 
       }
