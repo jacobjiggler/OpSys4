@@ -52,7 +52,7 @@ char* memory;
 //declare page table here (32 slots filled with custom struct page)
 struct page pageTable[32];
 
-int findLeastRecentyUsed (struct page* pageTable){
+int findLeastRecentyUsed (struct page* pageItr){
   //RETURNS -1 as error case
   const int tableSize = 32;
   time_t oldestTime;
@@ -61,8 +61,8 @@ int findLeastRecentyUsed (struct page* pageTable){
   int i=0;
   for(i=0; i< tableSize; i++){
 
-    if (pageTable[i].lastEdited < oldestTime){
-      oldestTime = pageTable[i].lastEdited;
+    if (pageItr[i].lastEdited < oldestTime){
+      oldestTime = pageItr[i].lastEdited;
       oldestIndex =i;
     }
   }
@@ -119,7 +119,7 @@ void *connection_handler(void *socket_desc)
 
         char *dest;
         dest = strtok(temp, " ");
-        if (strcmp(temp, "DIR\n") ==0){
+        if (strcmp(temp, "DIR\n") ==0 || strcmp(temp, "DIR\r\n") ==0){
           printf("Command DIR Recognized\n");
           //call dir function
 
@@ -308,19 +308,14 @@ void *connection_handler(void *socket_desc)
         localtime(&pageTable[pageNum].lastEdited);
         index = 0;
         writeToClient(pageNum, byteOffset, firstPageSize, sock);
-
-        //write message of last FirstPageSize bytes to client(needs a bunch of code between these 2 lines)
-        //print stuff
 			}
 			else{
-              //update last edited
-              //do page check and set page[0] then write bytes
-              //pages[0] = right page
-              //index = 1;
-              //strcpy the whole 1024 bytes into memory
-              //write message of last FirstPageSize bytes to client(needs a bunch of code between these 2 lines)
-              //print stuff
-
+        pageNum = findLeastRecentyUsed (pageTable);
+        //pages[0] = right page
+        //transfer
+        //writeToClient
+        //update last edited
+        //index = 1;
 }
 
           //check if exists
