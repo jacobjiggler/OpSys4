@@ -145,7 +145,7 @@ void *connection_handler(void *socket_desc)
                 }
               }
               fclose(fptr);
-            puts("asdfsdf");
+              puts("asdfsdf");
       		  write(sock , "FILE Read" , strlen("FILE Read"));
           //if there is a digit before end
             //store index of first digit in string of digits

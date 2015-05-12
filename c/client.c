@@ -43,6 +43,13 @@ int main(int argc , char *argv[])
         printf("Enter message : ");
         if (fgets(message, sizeof(message), stdin) == NULL)
             break;
+	    
+		//Send some data
+        if( send(sock , message , strlen(message) , 0) < 0)
+        {
+            puts("Send failed");
+            return 1;
+        }
 		char substr[100];
 		int pos = 0;
 		while (pos < 5){
@@ -80,7 +87,6 @@ int main(int argc , char *argv[])
 			}
 			puts(file_name);
 			puts(bytes_size);
-			int n = 0; //total bytes read/written
 			int n_bytes = atoi(bytes_size);
 			char buffer[n_bytes];
 			while(!feof(fp)){
@@ -90,20 +96,15 @@ int main(int argc , char *argv[])
 				}
 				//puts(buffer);
 				//write(sock ,buffer,read);
-				n+=read;
-				strcat(message, buffer);
+				if( send(sock , buffer , strlen(buffer) , 0) < 0)
+				{
+					puts("Send failed");
+					return 1;
+				}
 				//puts(message);
 			}
 			fclose(fp);
 		}
-
-
-        //Send some data
-        if( send(sock , message , strlen(message) , 0) < 0)
-        {
-            puts("Send failed");
-            return 1;
-        }
     }
 
     close(sock);
