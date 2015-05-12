@@ -51,7 +51,7 @@ void *connection_handler(void *socket_desc)
 
         char *dest;
         dest = strtok(temp, " ");
-        if (strcmp(temp, "DIR\n")==0){
+        if (strcmp(temp, "DIR\n") ==0){
           printf("Command DIR Recognized\n");
           //call dir function
 
