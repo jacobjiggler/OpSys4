@@ -278,12 +278,16 @@ void *connection_handler(void *socket_desc)
       }
       else if(!strcmp(dest,"DELETE")){
         puts("Received DELETE");
-          //if there is a char before \n
-            //save filename
+          //if it exists
+            //add flock
+            //search all of pagetable for it.
+            //unallocate any with it
+            //lock them before you unallocate them.
+            //delete the actual file
+
           //else
-            //printf("ERROR: Incorrect Syntax For COMMAND\n");
+            //printf("ERROR: File doesn't exist\n");
             //return
-          //call delete function
         }
 
 
@@ -313,7 +317,7 @@ void *connection_handler(void *socket_desc)
 //struct to hold page info
 struct page {
   char filename[1000];
-  int offset;
+  int pageNum;
   //Will hold the number in which it was edited
   time_t lastEdited;
 };
