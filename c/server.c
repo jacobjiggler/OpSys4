@@ -347,6 +347,10 @@ int checkForPage(char filename, int offset){
 
   return -1;
 }
+int transferPage(int index, char * filename, int pageNum, char * buffer){
+
+  return -1
+}
 int main(int argc , char *argv[])
 {
   //declare memory array here(32 slots with 1024 bits)
