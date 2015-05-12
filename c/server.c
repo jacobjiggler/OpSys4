@@ -224,7 +224,7 @@ void *connection_handler(void *socket_desc)
 
           }
 		  else{
-			if (flock(fileno(fptr), LOCK_SH)!=0) 
+			if (flock(fileno(fptr), LOCK_SH)!=0){ 
 				puts("file lock not achieved");
 				continue;
 			}
@@ -284,6 +284,7 @@ void *connection_handler(void *socket_desc)
                 //index++
             //}
 		  flock(fileno(fptr), LOCK_UN);
+		  }
 		}
 		else if(!strcmp(dest,"DELETE")){
 		  puts("Received DELETE");
