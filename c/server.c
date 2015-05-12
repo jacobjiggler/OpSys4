@@ -319,12 +319,14 @@ struct page {
 };
 
 int findLeastRecentyUsed (struct page* pageTable){
+  //RETURNS -1 as error case
   const int tableSize = 32;
   time_t oldestTime;
   int oldestIndex;
   localtime(&oldestTime);
   int i;
   for(i =1; i< tableSize; i++){
+    if(pagetable[i]==NULL) return -1
     if (pageTable[i].lastEdited < oldestTime){
       oldestTime = pageTable[i].lastEdited;
       oldestIndex =i;
