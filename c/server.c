@@ -39,18 +39,13 @@
 
 void *connection_handler(void *socket_desc)
 {
-
-
     //Get the socket descriptor
     int sock = *(int*)socket_desc;
-
-
+	
     //Send some messages to the client
 
     FILE *command = fdopen(sock, "r");
     write(sock , "HALLO!\n" , strlen("HALLO!\n"));
-
-
 
     //(PARSE OUT COMMAND OR RETURN ERROR)(USE FGETS)
     while(1){
@@ -217,6 +212,7 @@ void *connection_handler(void *socket_desc)
           memset(file_path,0,9);
           strcat(file_path, ".storage/");
           strcat(file_path, file_name);
+		  FILE * fptr = fopen(file_path, "r");
           //read function
           //add locks
           //wrote this when super tired need to recheck work
@@ -234,9 +230,7 @@ void *connection_handler(void *socket_desc)
 			}
 			struct stat st;
 			stat(file_path, &st);
-			size = st.st_size;
-			
-		  }
+			int size = st.st_size;
           //check if exists
           //if it doesnt
             //[thread 134559232] Sent: ERROR NO SUCH FILE
@@ -290,47 +284,40 @@ void *connection_handler(void *socket_desc)
                 //index++
             //}
 		  flock(fileno(fptr), LOCK_UN);
+		}
+		else if(!strcmp(dest,"DELETE")){
+		  puts("Received DELETE");
+			  //if it exists
+				//add flock
+				//search all of pagetable for it.
+				//unallocate any with it
+				//lock them before you unallocate them.
+				//delete the actual file
 
+			  //else
+				//printf("ERROR: File doesn't exist\n");
+				//return
+		  }
+		else{
+		  printf("contents %s\n", temp);
+		  printf("ERROR: Incorrect Syntax For COMMAND\n");
+		  write(sock , "ERROR: Incorrect Syntax For COMMAND\n" , strlen("ERROR: Incorrect Syntax For COMMAND\n"));
+		}
 
-      }
-      else if(!strcmp(dest,"DELETE")){
-        puts("Received DELETE");
-          //if it exists
-            //add flock
-            //search all of pagetable for it.
-            //unallocate any with it
-            //lock them before you unallocate them.
-            //delete the actual file
-
-          //else
-            //printf("ERROR: File doesn't exist\n");
-            //return
-        }
-
-
-
-
-      else{
-        printf("contents %s\n", temp);
-        printf("ERROR: Incorrect Syntax For COMMAND\n");
-        write(sock , "ERROR: Incorrect Syntax For COMMAND\n" , strlen("ERROR: Incorrect Syntax For COMMAND\n"));
-      }
     }
-      else {
+	else {
         puts("Client closed it's socket....terminating");
         fflush(stdout);
         return 0;
-      }
-
-  		fflush(stdout);
-
-
-  		//clear the message buffer
-  		memset(temp, 0, 2000);
     }
 
+      fflush(stdout);
+  	  //clear the message buffer
+  	  memset(temp, 0, 2000);
+	}
     return 0;
 }
+
 //struct to hold page info
 struct page {
   char filename[1000];
@@ -371,6 +358,7 @@ int transferPage(int index, char * filename, int pageNum, char * buffer){
 
   return -1;
 }
+
 int main(int argc , char *argv[])
 {
   //declare memory array here(32 slots with 1024 bits)
