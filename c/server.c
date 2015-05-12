@@ -1,9 +1,8 @@
-//testing of multiple commands/store commands
 //testing of partially correct commands(store without any data afterwards)
 //READ
 //DELETE
 //Page Table Operations
-
+//assure offset and length are < size of file
 
 
 
@@ -59,7 +58,6 @@ void *connection_handler(void *socket_desc)
       if (fgets(temp, PATH_MAX+ 1, command) != NULL){
         printf("[thread %lu] Rcvd: %s\n",(unsigned long)pthread_self(), temp);
 
-
         char *dest;
         dest = strtok(temp, " ");
         if (strcmp(temp, "DIR\n") ==0){
@@ -91,7 +89,8 @@ void *connection_handler(void *socket_desc)
             }
             write(sock , output , strlen(output));
             closedir(dir);
-
+            write(sock , "AWK\n" , strlen("AWK\n"));
+            puts("Sent: ACK");
           } else {
             /* could not open directory */
             printf ("couldn't open directory \n");
@@ -167,8 +166,10 @@ void *connection_handler(void *socket_desc)
               flock(fileno(fptr), LOCK_UN);
 
 
-      		  write(sock , "FILE Read\n" , strlen("FILE Read\n"));
-            puts("sent: file read");
+            printf("[thread %lu] Transferred file (%d bytes)\n",(unsigned long)pthread_self(), numBytes);
+            write(sock , "AWK\n" , strlen("AWK\n"));
+            puts("Sent: ACK");
+
 
 
         }
@@ -216,20 +217,64 @@ void *connection_handler(void *socket_desc)
           memset(file_path,0,9);
           strcat(file_path, ".storage/");
           strcat(file_path, file_name);
-          //if there is a digit before end
-          //store index of first digit in string of digits
-          //convert num to int and save as length
-        //else
-          //printf("ERROR: Incorrect Syntax For COMMAND\n");
-          //return
-        //if there is a digit before index of previous digits
-          //store index of first digit in string of digits
-          //convert num to int and save as byteoffset
-        //else
-          //printf("ERROR: Incorrect Syntax For COMMAND\n");
-          //return
-        //save filename (dont foget the space)
-        //either create and call a READ function or write it here
+          //read function
+          //add locks
+          //wrote this when super tired need to recheck work
+
+          //check if exists
+          //if it doesnt
+            //[thread 134559232] Sent: ERROR NO SUCH FILE
+          //if it does
+            //multilock with read only
+            //get filesize
+            //difference = offset % 1024
+            //firstPageSize = 1024 - difference
+            //if firstPageSize > length
+              //firstPageSize = length
+            //struct page* pages[4];
+            //int index
+            //use preexisting page if possible to write beginning bytes
+              //update last edited
+              //index = 0
+              //write message of last FirstPageSize bytes to client(needs a bunch of code between these 2 lines)
+              //print stuff
+            //else
+              //update last edited
+              //do page check and set page[0] then write bytes
+              //pages[0] = right page
+              //index = 1;
+              //strcpy the whole 1024 bytes into memory
+              //write message of last FirstPageSize bytes to client(needs a bunch of code between these 2 lines)
+              //print stuff
+
+
+
+            //byteOffset = byteOffset + firstPageSize
+            //bytesRead = firstPageSize
+            //while(index < 4 && bytesRead < length){
+              //check if 1024 > (length - bytesRead)
+              //if it is{
+                //bytesToWrite = length - bytesRead
+              //else
+                //bytesToWrite = 1024
+              //check if in preexisting page and use that if you can
+                //update bytesRead and offset
+                //print stuff
+              //else
+                //if index < 4
+                  //do page check and assign new page
+                  //pages[index%4] = right page
+                //else
+                  //rewrite page already in pages
+                //strcpy those bytes into memory
+                //write message of those bytes to client
+                //update bytesRead
+                //updateoffset
+                //print stuff
+                //index++
+            //}
+
+
       }
       else if(!strcmp(dest,"DELETE")){
         puts("Received DELETE");
@@ -255,9 +300,7 @@ void *connection_handler(void *socket_desc)
         fflush(stdout);
         return 0;
       }
-      write(sock , "AWK\n" , strlen("AWK\n"));
 
-  		puts("Sent: ACK");
   		fflush(stdout);
 
 
@@ -270,7 +313,7 @@ void *connection_handler(void *socket_desc)
 //struct to hold page info
 struct page {
   char filename[1000];
-  int pageNum;
+  int offset;
   //Will hold the number in which it was edited
   time_t lastEdited;
 };
@@ -289,13 +332,21 @@ int findLeastRecentyUsed (struct page* pageTable){
   }
   return oldestIndex;
 }
+int checkForPage(char filename, int offset){
+  //check if a page exists with same offset
+  //if it exists
+    //update lastEdited
+    //return its index
+  // else return -1
 
+  return -1;
+}
 int main(int argc , char *argv[])
 {
   //declare memory array here(32 slots with 1024 bits)
     // allocate 32,768 with calloc
     //then turn into array of char of that size
-    char* test = calloc(32,1024);
+    char* memory = calloc(32,1024);
 
   //declare page table here (32 slots filled with custom struct page)
   struct page pageTable[32];
