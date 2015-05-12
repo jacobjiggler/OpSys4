@@ -153,8 +153,10 @@ void *connection_handler(void *socket_desc)
                 puts("asdfsdf");
               }
               fclose(fptr);
+
       		  write(sock , "FILE Read\n" , strlen("FILE Read"));
             puts("sent: file read");
+
           //if there is a digit before end
             //store index of first digit in string of digits
             //convert num to int and save as bytes
