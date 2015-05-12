@@ -46,6 +46,9 @@ void *connection_handler(void *socket_desc)
     while(1){
       char temp[PATH_MAX + 1];
       if (fgets(temp, PATH_MAX+ 1, command) != NULL){
+        printf("[thread %lu] Rcvd: %s\n",(unsigned long)pthread_self(), temp);
+
+
         char *dest;
         dest = strtok(temp, " ");
         if (strcmp(temp, "DIR\n")==0){
@@ -109,7 +112,7 @@ void *connection_handler(void *socket_desc)
 
           //puts(file_name);
     			//puts(bytes_size);
-    			int numBytes = atoi(bytes_size);          //Check if file exists
+    			int numBytes = atoi(bytes_size);
           char file_path[1000];
           strcat(file_path, ".storage/");
           strcat(file_path, file_name);
@@ -164,6 +167,43 @@ void *connection_handler(void *socket_desc)
         }
         else if(!strcmp(dest,"READ")){
           puts("Received READ");
+          char file_name [100];
+          char bytes_size [100];
+          char length [100];
+          int f_pos = 0;
+          int b_pos = 0;
+          int l_pos = 0;
+          int pos = 5;
+          while(temp[pos] != ' '){
+            file_name[f_pos] = temp[pos];
+            //putchar(file_name[f_pos]);
+            f_pos++;
+            pos++;
+          }
+          pos++;
+          while(temp[pos] != ' '){
+            bytes_size[b_pos] = temp[pos];
+            b_pos++;
+            pos++;
+          }
+          pos++;
+          while(temp[pos] != '\n'){
+            length[l_pos] = temp[pos];
+            l_pos++;
+            pos++;
+          }
+          printf("f_pos %d\n", f_pos);
+          printf("b_pos %d\n", b_pos);
+          printf("l_pos %d\n", l_pos);
+
+          file_name[f_pos] = '\0';
+          bytes_size[b_pos] = '\0';
+          length[l_pos] = '\0';
+    			int byteOffset = atoi(bytes_size);
+          int readLength = atoi(length);
+          char file_path[1000];
+          strcat(file_path, ".storage/");
+          strcat(file_path, file_name);
           //if there is a digit before end
           //store index of first digit in string of digits
           //convert num to int and save as length
