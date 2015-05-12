@@ -231,6 +231,29 @@ void *connection_handler(void *socket_desc)
 			struct stat st;
 			stat(file_path, &st);
 			int size = st.st_size;
+			int difference = offset % 1024;
+			firstPageSize = 1024 - difference;
+			if(firstPageSize > length){
+				firstPageSize = length;
+			}
+			struct page* frame[4];
+			int index;
+			if(checkForFileInPageTable(struct page* pageTable, char * filename)){ //use preexisting page if possible to write to beginning bytes
+				//update last edited
+                //index = 0
+                //write message of last FirstPageSize bytes to client(needs a bunch of code between these 2 lines)
+                //print stuff
+			}
+			else{ 
+              //update last edited
+              //do page check and set page[0] then write bytes
+              //pages[0] = right page
+              //index = 1;
+              //strcpy the whole 1024 bytes into memory
+              //write message of last FirstPageSize bytes to client(needs a bunch of code between these 2 lines)
+              //print stuff			
+			}
+			
           //check if exists
           //if it doesnt
             //[thread 134559232] Sent: ERROR NO SUCH FILE
