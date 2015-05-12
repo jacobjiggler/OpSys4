@@ -15,6 +15,7 @@
 #include <pthread.h>
 #include <dirent.h>
 #include <ctype.h>
+#include <time.h>
 
 #define BUFFER_SIZE 1024
 #define PORT 8765
@@ -24,14 +25,7 @@
 
 //declare mutex locks up here
 
-//struct to hold page info
-struct page {
-  char filename[1000];
-  int pageNum;
 
-  //Will hold the number in which it was edited
-  int lastEdited;
-};
 
 void *connection_handler(void *socket_desc)
 {
@@ -220,6 +214,27 @@ void *connection_handler(void *socket_desc)
     }
 
     return 0;
+}
+//struct to hold page info
+struct page {
+  char filename[1000];
+  int pageNum;
+  //Will hold the number in which it was edited
+  time_t lastEdited;
+};
+
+int findLeastRecentyUsed (struct page* pageTable){
+  const int tableSize = 32;
+  time_t oldestTime;
+  int oldestIndex;
+  localtime(&oldestTime);
+  for(int i =1; i< tableSize; i++){
+    if (pageTable[i].lastEdited < oldestTime){
+      oldestTime = pageTable[i].lastEdited;
+      oldestIndex =i;
+    }
+  }
+  return oldestIndex;
 }
 
 int main(int argc , char *argv[])
