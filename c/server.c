@@ -72,7 +72,16 @@ int checkForFileInPageTable(struct page* pageTable, char * filename){
   return -1;
 }
 int transferPage(int index, char * filename, int pageNum, char * buffer){
+  char * toOpen= ".storage/";
+  strcat(toOpen,filename);
 
+  FILE* fptr = fopen(filename, 'r');
+  if (fptr==NULL){
+    perror("ERROR Could not open file for reading\n");
+  }
+  else{
+
+  }
   return -1;
 }
 
@@ -360,7 +369,7 @@ void *connection_handler(void *socket_desc)
             //}
 		  flock(fileno(fptr), LOCK_UN);
 		  }
-    
+
 		}
 		else if(!strcmp(dest,"DELETE")){
 		  puts("Received DELETE");
