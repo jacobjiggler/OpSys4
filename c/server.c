@@ -326,11 +326,11 @@ int findLeastRecentyUsed (struct page* pageTable){
   //RETURNS -1 as error case
   const int tableSize = 32;
   time_t oldestTime;
-  int oldestIndex;
+  int oldestIndex =0;
   localtime(&oldestTime);
-  int i;
-  for(i =1; i< tableSize; i++){
-    if(pagetable[i]==NULL) return -1
+  int i=0;
+  for(i=0; i< tableSize; i++){
+
     if (pageTable[i].lastEdited < oldestTime){
       oldestTime = pageTable[i].lastEdited;
       oldestIndex =i;
@@ -338,18 +338,21 @@ int findLeastRecentyUsed (struct page* pageTable){
   }
   return oldestIndex;
 }
-int checkForPage(char filename, int offset){
+int checkForFileInPageTable(struct page* pageTable, char * filename){
   //check if a page exists with same offset
-  //if it exists
-    //update lastEdited
-    //return its index
-  // else return -1
-
+  const int tableSize = 32;
+  int i;
+  for(i =0; i< tableSize; i++){
+    if (strcmp(pageTable[i].filename,filename)){
+      localtime(&pageTable[i].lastEdited);
+      return i;
+    }
+  }
   return -1;
 }
 int transferPage(int index, char * filename, int pageNum, char * buffer){
 
-  return -1
+  return -1;
 }
 int main(int argc , char *argv[])
 {
