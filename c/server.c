@@ -228,7 +228,8 @@ int findLeastRecentyUsed (struct page* pageTable){
   time_t oldestTime;
   int oldestIndex;
   localtime(&oldestTime);
-  for(int i =1; i< tableSize; i++){
+  int i;
+  for(i =1; i< tableSize; i++){
     if (pageTable[i].lastEdited < oldestTime){
       oldestTime = pageTable[i].lastEdited;
       oldestIndex =i;
