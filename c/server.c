@@ -2,6 +2,7 @@
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/file.h>
 #include <errno.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
@@ -132,6 +133,7 @@ void *connection_handler(void *socket_desc)
 
               //start writing to file
               FILE * fptr = fopen(file_path, "w");
+              flock(fileno(fptr), LOCK_EX);
               if(fptr == NULL){
                 perror("Error opening file for writing\n");
                 continue;
@@ -156,6 +158,7 @@ void *connection_handler(void *socket_desc)
                 puts("asdfsdf");
               }
               fclose(fptr);
+              flock(fileno(fptr), LOCK_UN);
 
 
       		  write(sock , "FILE Read\n" , strlen("FILE Read"));
