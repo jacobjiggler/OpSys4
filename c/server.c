@@ -142,14 +142,15 @@ void *connection_handler(void *socket_desc)
                 int itr = 0;
                 int runthrough = numBytes / BUFFER_SIZE;
                 while(itr < runthrough){
-                  fgets(file_line, BUFFER_SIZE, command);
+                  fread(file_line, sizeof(char), BUFFER_SIZE / sizeof(char), command);
                   printf("%s\n",file_line);
-                  fwrite(file_line,sizeof(char), BUFFER_SIZE, fptr);
+                  fwrite(file_line, sizeof(char), BUFFER_SIZE, fptr);
                   puts("devided once");
+                  itr++;
                 }
-                fgets(file_line, numBytes % BUFFER_SIZE, command);
+                fread(file_line, sizeof(char), (numBytes % BUFFER_SIZE) / sizeof(char), command);
                 printf("%s\n",file_line);
-                fwrite(file_line,sizeof(char), numBytes % BUFFER_SIZE, fptr);
+                fwrite(file_line, sizeof(char), (numBytes % BUFFER_SIZE), fptr);
                 puts("asdfsdf");
               }
               fclose(fptr);
