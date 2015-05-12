@@ -51,8 +51,8 @@ void *connection_handler(void *socket_desc)
     while(1){
       char temp[PATH_MAX + 1];
       if (fgets(temp, PATH_MAX+ 1, command) != NULL){
-        char dest[6];
-        strncpy(dest,temp,6);
+        char *dest;
+        dest = strtok(temp, " ");
         if (strcmp(temp, "DIR\n")==0){
           printf("Command DIR Recognized\n");
           //call dir function
@@ -89,9 +89,7 @@ void *connection_handler(void *socket_desc)
           }
         }
 
-        else if (!strcmp(dest,"STORE ")){
-          //for now
-          int length = strlen(temp);
+        else if (!strcmp(dest,"STORE")){
           char file_name [100];
           char bytes_size [100];
           int f_pos = 0;
@@ -161,44 +159,42 @@ void *connection_handler(void *socket_desc)
       		  write(sock , "FILE Read\n" , strlen("FILE Read"));
             puts("sent: file read");
 
-          //if there is a digit before end
-            //store index of first digit in string of digits
-            //convert num to int and save as bytes
-          //else
-            //printf("ERROR: Incorrect Syntax For COMMAND\n");
-            //return
-          //save filename(dont forget about the space between filename and bytes)
-          //either create and call a store function or write it here
 
         }
-        //else if !string compare(client_message(first 5 char) "READ ")
+
+
+
+        }
+        else if(!strcmp(dest,"READ")){
+          puts("Received READ");
           //if there is a digit before end
-            //store index of first digit in string of digits
-            //convert num to int and save as length
-          //else
-            //printf("ERROR: Incorrect Syntax For COMMAND\n");
-            //return
-          //if there is a digit before index of previous digits
-            //store index of first digit in string of digits
-            //convert num to int and save as byteoffset
-          //else
-            //printf("ERROR: Incorrect Syntax For COMMAND\n");
-            //return
-          //save filename (dont foget the space)
-          //either create and call a READ function or write it here
-
-
-        //else if !string compare(client_message(first 5 char) "DELETE ")
+          //store index of first digit in string of digits
+          //convert num to int and save as length
+        //else
+          //printf("ERROR: Incorrect Syntax For COMMAND\n");
+          //return
+        //if there is a digit before index of previous digits
+          //store index of first digit in string of digits
+          //convert num to int and save as byteoffset
+        //else
+          //printf("ERROR: Incorrect Syntax For COMMAND\n");
+          //return
+        //save filename (dont foget the space)
+        //either create and call a READ function or write it here
+      }
+      else if(!strcmp(dest,"DELETE")){
+        puts("Received DELETE");
           //if there is a char before \n
             //save filename
           //else
             //printf("ERROR: Incorrect Syntax For COMMAND\n");
             //return
           //call delete function
+        }
 
 
 
-      }
+
       else{
         puts(temp);
         printf("ERROR: Incorrect Syntax For COMMAND\n");
