@@ -52,7 +52,6 @@ int main(int argc , char *argv[])
 		puts(substr);
 		if (strcmp(substr, "STORE")==0)
 		{
-			puts("SUCCESS");
 			char file_name [100];
 			char bytes_size [100];
 			int f_pos = 0;
@@ -94,6 +93,7 @@ int main(int argc , char *argv[])
 				strcat(message, buffer);
 				//puts(message);
 			}
+      puts("SUCCESS");
 			fclose(fp);
 		}
 
@@ -103,6 +103,9 @@ int main(int argc , char *argv[])
         {
             puts("Send failed");
             return 1;
+        }
+        else {
+          puts("test");
         }
     }
 

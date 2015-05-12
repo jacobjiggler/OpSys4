@@ -139,14 +139,22 @@ void *connection_handler(void *socket_desc)
                 mkdir(".storage", 0777);
                 printf("Command Store Recognized \n");
                 char file_line[BUFFER_SIZE];
-                while(fgets(file_line, sizeof(file_line), command) != NULL){
+                int itr = 0;
+                int runthrough = numBytes / BUFFER_SIZE;
+                while(itr < runthrough){
+                  fgets(file_line, BUFFER_SIZE, command);
                   printf("%s\n",file_line);
-                  fwrite(file_line,sizeof(char), numBytes, fptr);
+                  fwrite(file_line,sizeof(char), BUFFER_SIZE, fptr);
+                  puts("devided once");
                 }
+                fgets(file_line, numBytes % BUFFER_SIZE, command);
+                printf("%s\n",file_line);
+                fwrite(file_line,sizeof(char), numBytes % BUFFER_SIZE, fptr);
+                puts("asdfsdf");
               }
               fclose(fptr);
-            puts("asdfsdf");
-      		  write(sock , "FILE Read" , strlen("FILE Read"));
+      		  write(sock , "FILE Read\n" , strlen("FILE Read"));
+            puts("sent: file read");
           //if there is a digit before end
             //store index of first digit in string of digits
             //convert num to int and save as bytes
@@ -186,6 +194,7 @@ void *connection_handler(void *socket_desc)
 
       }
       else{
+        puts(temp);
         printf("ERROR: Incorrect Syntax For COMMAND\n");
         write(sock , "ERROR: Incorrect Syntax For COMMAND\n" , strlen("ERROR: Incorrect Syntax For COMMAND\n"));
       }
