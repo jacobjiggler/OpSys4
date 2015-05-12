@@ -125,10 +125,12 @@ void *connection_handler(void *socket_desc)
               perror("FILE EXISTS\n");
           } else {
               // file doesn't exist
-              // create the file in write mode and start copying
 
 
-              //save as blank and then flock it
+
+              //save as blank and then f-lock it
+
+              //start writing to file
               FILE * fptr = fopen(file_path, "w");
               if(fptr == NULL){
                 perror("Error opening file for writing\n");
@@ -154,6 +156,7 @@ void *connection_handler(void *socket_desc)
                 puts("asdfsdf");
               }
               fclose(fptr);
+
 
       		  write(sock , "FILE Read\n" , strlen("FILE Read"));
             puts("sent: file read");

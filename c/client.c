@@ -100,7 +100,9 @@ int main(int argc , char *argv[])
 					puts("Send failed");
 					return 1;
 				}
-				//puts(message);
+        else {
+          puts("asdfsfd");
+        }
 			}
       puts("SUCCESS");
 			fclose(fp);
