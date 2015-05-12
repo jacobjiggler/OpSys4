@@ -53,7 +53,6 @@ int main(int argc , char *argv[])
 		if (strcmp(substr, "STORE")==0)
 		{
 			puts("SUCCESS");
-			int file_send = 1;
 			char file_name [100];
 			char bytes_size [100];
 			int f_pos = 0;
@@ -69,7 +68,7 @@ int main(int argc , char *argv[])
 			while(message[pos] != '\n'){
 				bytes_size[b_pos] = message[pos];
 				b_pos++;
-				pos++;				
+				pos++;
 			}
 			printf("f_pos %d\n", f_pos);
 			printf("b_pos %d\n", b_pos);
@@ -95,10 +94,10 @@ int main(int argc , char *argv[])
 				strcat(message, buffer);
 				//puts(message);
 			}
-			fclose(fp);	
+			fclose(fp);
 		}
 
-		
+
         //Send some data
         if( send(sock , message , strlen(message) , 0) < 0)
         {

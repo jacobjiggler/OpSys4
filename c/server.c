@@ -59,7 +59,7 @@ void *connection_handler(void *socket_desc)
 
           DIR *dir;
           struct dirent *ent;
-          char dirname[] = "StagingArea";
+          char dirname[] = ".storage";
           if ((dir = opendir (dirname)) != NULL) {
             /* print all the files and directories within directory */
             int count = 0;
@@ -92,21 +92,44 @@ void *connection_handler(void *socket_desc)
         else if (!strcmp(dest,"STORE ")){
           //for now
           int length = strlen(temp);
-          char * word;
-          char * unused;
+          char file_name [100];
+          char bytes_size [100];
+          int f_pos = 0;
+          int b_pos = 0;
+          int pos = 6;
+          while(temp[pos] != ' '){
+            file_name[f_pos] = temp[pos];
+            //putchar(file_name[f_pos]);
+            f_pos++;
+            pos++;
+          }
+          pos++;
+          while(temp[pos] != '\n'){
+            bytes_size[b_pos] = temp[pos];
+            b_pos++;
+            pos++;
+          }
+          printf("f_pos %d\n", f_pos);
+          printf("b_pos %d\n", b_pos);
+          file_name[f_pos] = '\0';
+          bytes_size[b_pos] = '\0';
 
-          word = strtok_r(temp, " ", &unused );
-          printf("%s\n",word);
-          int numBytes = atoi(strtok_r( NULL, " \n", &unused ));
-          //Check if file exists
-          char* fname = strcat(".storage/", word);
-          if( access( fname, F_OK ) != -1 ) {
+          //puts(file_name);
+    			//puts(bytes_size);
+    			int numBytes = atoi(bytes_size);          //Check if file exists
+          char file_path[1000];
+          strcat(file_path, ".storage/");
+          strcat(file_path, file_name);
+          if( access( file_path, F_OK ) != -1 ) {
               // file exists
               perror("FILE EXISTS\n");
           } else {
               // file doesn't exist
               // create the file in write mode and start copying
-              FILE * fptr = fopen(fname, "w");
+
+
+              //save as blank and then flock it
+              FILE * fptr = fopen(file_path, "w");
               if(fptr == NULL){
                 perror("Error opening file for writing\n");
                 continue;
@@ -114,14 +137,16 @@ void *connection_handler(void *socket_desc)
               else{
                 //Create folder if it does not exist already
                 mkdir(".storage", 0777);
-                fwrite(unused,sizeof(char), numBytes, fptr);
+                printf("Command Store Recognized \n");
+                char file_line[BUFFER_SIZE];
+                while(fgets(file_line, sizeof(file_line), command) != NULL){
+                  printf("%s\n",file_line);
+                  fwrite(file_line,sizeof(char), numBytes, fptr);
+                }
               }
               fclose(fptr);
-    		  printf("Command Store Recognized \n");
-    		  char file_line[BUFFER_SIZE];
-              fgets(file_line, sizeof(file_line), command);
-    		  printf("%s\n",file_line);
-    		  write(sock , "FILE Read" , strlen("FILE Read"));
+            puts("asdfsdf");
+      		  write(sock , "FILE Read" , strlen("FILE Read"));
           //if there is a digit before end
             //store index of first digit in string of digits
             //convert num to int and save as bytes
