@@ -424,7 +424,12 @@ void *connection_handler(void *socket_desc)
 
 int main(int argc , char *argv[])
 {
-  memory = calloc(32,1024);
+    memory = calloc(32,1024);
+	int i;
+	for(i = 0; i < 32; i++){
+		pageTable[i].filename[0] = '\0';
+		pageTable[i].pageNum = -1;
+	}
 	int socket_desc , client_sock, c;
 	struct sockaddr_in server, client;
 	socket_desc = socket(AF_INET, SOCK_STREAM, 0);
@@ -446,7 +451,7 @@ int main(int argc , char *argv[])
     }
 	puts("bind done");
   //Create folder if it does not exist already
-  mkdir(".storage", 0777);
+    mkdir(".storage", 0777);
 	listen(socket_desc, 5);
 	c = sizeof(struct sockaddr_in);
 	pthread_t thread_id;
