@@ -277,7 +277,7 @@ void *connection_handler(void *socket_desc)
 
         }
         else if(!strcmp(dest,"READ")){
-          puts("Received READ");
+          //puts("Received READ");
           char file_name [100];
           char bytes_size [100];
           char length [100];
@@ -358,7 +358,7 @@ void *connection_handler(void *socket_desc)
         intemp[0] = pageNum;
         transferPage(pageLoc, file_path, file_name, 0, pageNum, -1);
         localtime(&pageTable[pageLoc].lastEdited);
-        printf("pageloc1: %d\n",pageLoc);
+        //printf("pageloc1: %d\n",pageLoc);
         writeToClient(pageLoc, byteOffset, firstPageSize, sock);
         byteOffset += firstPageSize;
         index = 1;
@@ -412,7 +412,7 @@ void *connection_handler(void *socket_desc)
 
 		}
 		else if(!strcmp(dest,"DELETE")){
-		    puts("Received DELETE");
+		//puts("Received DELETE");
         char file_name [100];
         int pos = 7;
         int f_pos = 0;
@@ -442,7 +442,7 @@ void *connection_handler(void *socket_desc)
 		  file_name[f_pos] = '\0';
 		  //puts(file_name);
           int pageLoc = checkForFileInPageTable(pageTable, file_name,-1);
-		  printf("page loc %d\n",pageLoc);
+		  //printf("page loc %d\n",pageLoc);
           while(pageLoc != -1){
             pthread_mutex_lock(&transferlock);
 
