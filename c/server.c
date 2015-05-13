@@ -48,20 +48,20 @@ struct page {
 //declare memory array here(32 slots with 1024 bits)
   // allocate 32,768 with calloc
   //then turn into array of char of that size
-char* memory;
+char memory[32][1024];
 
 //declare page table here (32 slots filled with custom struct page)
 struct page pageTable[32];
 
 int findLeastRecentyUsed (struct page* pageItr){
-  //RETURNS -1 as error case
   const int tableSize = 32;
   time_t oldestTime;
   int oldestIndex =0;
   localtime(&oldestTime);
   int i=0;
   for(i=0; i< tableSize; i++){
-
+    if(pageTable[i].pageNum == -1)
+      return i;
     if (pageItr[i].lastEdited < oldestTime){
       oldestTime = pageItr[i].lastEdited;
       oldestIndex =i;
@@ -74,39 +74,51 @@ int checkForFileInPageTable(struct page* pageTable, char * filename){
   const int tableSize = 32;
   int i;
   for(i =0; i< tableSize; i++){
-    if (strcmp(pageTable[i].filename,filename)){
+    if (!strcmp(pageTable[i].filename,filename)){
       localtime(&pageTable[i].lastEdited);
       return i;
     }
   }
   return -1;
 }
-int transferPage(int index, char * filename, int pageNum, char * buffer){
-  char * toOpen= ".storage/";
-  strcat(toOpen,filename);
+int transferPage(int index, char * filepath, int pageNum){
+  //add locks
 
-  FILE* fptr = fopen(filename, "r");
+
+  FILE* fptr = fopen(filepath, "r");
   if (fptr==NULL){
     perror("ERROR Could not open file for reading\n");
   }
   else{
+    int startByte = 1024 * index;
+    fseek(fptr, startByte,SEEK_SET);
+    //char* = memory[index*1024];
 
+    fread(memory[index], sizeof(char), 1024, fptr);
+    puts(memory[index]);
+    //save the memory
+    //update pagetable
+    //remove locks
+    return index;
   }
+  //remove locks
   return -1;
 }
+
 int writeToClient(int index, int offset, int numBytes, int sock){
   //lock
   //code
   //print stuff;
+
   char file_content[numBytes];
   char output[numBytes+100];
   int i;
   for(i = 0; i < numBytes; i++){
-	file_content[i] = memory[offset+i];
+  	file_content[i] = memory[index][offset%1024+i];
   }
   snprintf(output, sizeof(output), "AWK %d\n%s", numBytes, file_content);
   write(sock , output , strlen(output));
-  
+
   return -1;
 }
 
@@ -127,10 +139,11 @@ void *connection_handler(void *socket_desc)
     while(1){
       char temp[PATH_MAX + 1];
       if (fgets(temp, PATH_MAX+ 1, command) != NULL){
-        printf("[thread %lu] Rcvd: %s\n",(unsigned long)pthread_self(), temp);
-
         char *dest;
         dest = strtok(temp, " ");
+        printf("[thread %lu] Rcvd: %s\n",(unsigned long)pthread_self(), temp);
+
+
         if (strcmp(temp, "DIR\n") ==0 || strcmp(temp, "DIR\r\n") ==0){
           printf("Command DIR Recognized\n");
           //call dir function
@@ -292,9 +305,10 @@ void *connection_handler(void *socket_desc)
           //read function
           //add locks
           //wrote this when super tired need to recheck work
-		  if( access( file_path, F_OK ) != -1 ) {
+		  if( access( file_path, F_OK ) == -1 ) {
             // file exists
-			printf("[thread %lu] Sent: ERROR NO SUCH FILE\n",(unsigned long)pthread_self());
+            puts(file_path);
+			      printf("[thread %lu] Sent: ERROR NO SUCH FILE\n",(unsigned long)pthread_self());
             write(sock , "Error: NO SUCH FILE\n" , strlen("Error: NO SUCH FILE\n"));
             perror("Error: NO SUCH FILE\n");
 
@@ -322,12 +336,12 @@ void *connection_handler(void *socket_desc)
         writeToClient(pageNum, byteOffset, firstPageSize, sock);
 			}
 			else{
-        pageNum = findLeastRecentyUsed (pageTable);
-        //pages[0] = right page
-        //transfer
-        //writeToClient
-        //update last edited
-        //index = 1;
+        pageNum = findLeastRecentyUsed(pageTable);
+        frame[0] = &pageTable[pageNum];
+        transferPage(pageNum, file_path, 0);
+        writeToClient(pageNum, byteOffset, firstPageSize, sock);
+        localtime(&pageTable[pageNum].lastEdited);
+        index = 1;
 }
 
           //check if exists
@@ -397,7 +411,7 @@ void *connection_handler(void *socket_desc)
 
 			  //else
 				//printf("ERROR: File doesn't exist\n");
-				//return
+				//returnwhat
 		  }
 		else{
 		  printf("contents %s\n", temp);
@@ -424,12 +438,15 @@ void *connection_handler(void *socket_desc)
 
 int main(int argc , char *argv[])
 {
-    memory = calloc(32,1024);
+
 	int i;
 	for(i = 0; i < 32; i++){
 		pageTable[i].filename[0] = '\0';
 		pageTable[i].pageNum = -1;
 	}
+
+  //char memory = calloc(32,1024);
+
 	int socket_desc , client_sock, c;
 	struct sockaddr_in server, client;
 	socket_desc = socket(AF_INET, SOCK_STREAM, 0);
