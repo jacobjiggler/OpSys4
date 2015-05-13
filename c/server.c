@@ -343,6 +343,7 @@ void *connection_handler(void *socket_desc)
       int pageLoc = checkForFileInPageTable(pageTable, file_name,pageNum);
       int intemp[4];
 			if(pageLoc != -1){
+        puts("I found you, miss new boo");
         //use preexisting page if possible to write to beginning bytes
         localtime(&pageTable[pageLoc].lastEdited);
         index = 0;
@@ -374,6 +375,7 @@ void *connection_handler(void *socket_desc)
           pageNum = byteOffset / 1024;
           pageLoc = checkForFileInPageTable(pageTable, file_name, pageNum);
           if(pageLoc != -1){
+            puts("I found you, miss new boo");
             //use preexisting page if possible to write to beginning bytes
             localtime(&pageTable[pageLoc].lastEdited);
             printf("pageloc2: %d\n",pageLoc);
@@ -414,7 +416,6 @@ void *connection_handler(void *socket_desc)
         int f_pos = 0;
         while(temp[pos] != ' '){
           file_name[f_pos] = temp[pos];
-          //putchar(file_name[f_pos]);
           f_pos++;
           pos++;
         }
@@ -422,18 +423,17 @@ void *connection_handler(void *socket_desc)
         memset(file_path,0,9);
         strcat(file_path, ".storage/");
         strcat(file_path, file_name);
-        if( access( file_path, F_OK ) == -1 ) {
+        puts(file_path);
+        if( access( file_path, F_OK ) != -1 ) {
               // file doesnt exists
-              puts(file_path);
+              puts("asdf");
   			      printf("[thread %lu] Sent: ERROR NO SUCH FILE\n",(unsigned long)pthread_self());
               write(sock , "Error: NO SUCH FILE\n" , strlen("Error: NO SUCH FILE\n"));
               perror("Error: NO SUCH FILE\n");
 
             }
   		  else{
-          FILE * fptr = fopen(file_path, "w");
-
-          flock(fileno(fptr), LOCK_EX);
+          //maybe add flock here while deleting it.
           int pageLoc = checkForFileInPageTable(pageTable, file_name,-1);
           while(pageLoc != -1){
             pthread_mutex_lock(&transferlock);
@@ -444,9 +444,19 @@ void *connection_handler(void *socket_desc)
             printf("Deallocated frame %d\n",pageLoc);
             pthread_mutex_unlock(&transferlock);
           }
-          fclose(fptr);
+
   				//delete the actual file
-          flock(fileno(fptr), LOCK_UN);
+          int status = remove(file_path);
+
+         if( status == 0 ){
+          printf("[thread %lu] Deleted %s file\n",(unsigned long)pthread_self(), file_name);
+          write(sock , "AWK\n" , strlen("AWK\n"));
+        }
+         else{
+            printf("Unable to delete the file\n");
+            write(sock , "Error????\n" , strlen("Error????\n"));
+            perror("Error");
+         }
         }
 
 		  }
