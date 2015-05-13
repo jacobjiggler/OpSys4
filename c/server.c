@@ -26,6 +26,7 @@
 #include <dirent.h>
 #include <ctype.h>
 #include <time.h>
+#include <math.h>
 
 #define BUFFER_SIZE 1024
 #define PORT 8765
@@ -94,7 +95,18 @@ int transferPage(int index, char * filename, int pageNum, char * buffer){
   return -1;
 }
 int writeToClient(int index, int offset, int numBytes, int sock){
-
+  //lock
+  //code
+  //print stuff;
+  char file_content[numBytes];
+  char output[numBytes+100];
+  int i;
+  for(i = 0; i < numBytes; i++){
+	file_content[i] = memory[offset+i];
+  }
+  snprintf(output, sizeof(output), "AWK %d\n%s", numBytes, file_content);
+  write(sock , output , strlen(output));
+  
   return -1;
 }
 
