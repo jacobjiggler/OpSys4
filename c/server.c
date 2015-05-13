@@ -83,7 +83,7 @@ int checkForFileInPageTable(struct page* pageTable, char * filename){
   }
   return -1;
 }
-int transferPage(int index, char * filepath, int pageNum){
+int transferPage(int index, char * filepath, int frame, int pageNum, int replacedPage){
   FILE* fptr = fopen(filepath, "r");
   if (fptr==NULL){
     perror("ERROR Could not open file for reading\n");
@@ -91,15 +91,16 @@ int transferPage(int index, char * filepath, int pageNum){
   else{
     int startByte = 1024 * index;
     fseek(fptr, startByte,SEEK_SET);
-    //char* = memory[index*1024];
     pthread_mutex_lock(&transferlock);
     fread(memory[index], sizeof(char), 1024, fptr);
     pthread_mutex_unlock(&transferlock);
 
     puts(memory[index]);
-    //save the memory
     //update pagetable
-    //remove locks
+    printf("[thread %lu] Allocated page %d to frame %d",(unsigned long)pthread_self(), pageNum, frame);
+    if (replacedPage > -1)
+      printf("(replaced page %d)",replacedPage);
+    printf("\n");
     return index;
   }
   //remove locks
@@ -304,7 +305,7 @@ void *connection_handler(void *socket_desc)
           memset(file_path,0,9);
           strcat(file_path, ".storage/");
           strcat(file_path, file_name);
-		  FILE * file = fopen(file_path, "r");
+		      FILE * file = fopen(file_path, "r");
           //read function
           //add locks
           //wrote this when super tired need to recheck work
@@ -329,21 +330,23 @@ void *connection_handler(void *socket_desc)
 			if(firstPageSize > readLength){
 				firstPageSize = readLength;
 			}
+      int bytesWritten;
 			struct page* frame[4];
 			int index;
-      int pageNum = checkForFileInPageTable(pageTable, file_name);
-			if(pageNum != -1){
+      int pageNum = byteOffset / 1024;
+      int pageLoc = checkForFileInPageTable(pageTable, file_name);
+			if(pageLoc != -1){
         //use preexisting page if possible to write to beginning bytes
-        localtime(&pageTable[pageNum].lastEdited);
+        localtime(&pageTable[pageLoc].lastEdited);
         index = 0;
-        writeToClient(pageNum, byteOffset, firstPageSize, sock);
+        writeToClient(pageLoc, byteOffset, firstPageSize, sock);
 			}
 			else{
-        pageNum = findLeastRecentyUsed(pageTable);
-        frame[0] = &pageTable[pageNum];
-        transferPage(pageNum, file_path, 0);
-        writeToClient(pageNum, byteOffset, firstPageSize, sock);
-        localtime(&pageTable[pageNum].lastEdited);
+        pageLoc = findLeastRecentyUsed(pageTable);
+        frame[0] = &pageTable[pageLoc];
+        transferPage(pageLoc, file_path, 0, pageNum, -1);
+        localtime(&pageTable[pageLoc].lastEdited);
+        writeToClient(pageLoc, byteOffset, firstPageSize, sock);
         index = 1;
 }
 
