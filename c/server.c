@@ -35,6 +35,8 @@
 #define FRAMES_PER_FILE 4
 
 //declare mutex locks up here
+pthread_mutex_t transferlock;
+pthread_mutex_t writelock;
 
 //struct to hold page info
 struct page {
@@ -82,9 +84,6 @@ int checkForFileInPageTable(struct page* pageTable, char * filename){
   return -1;
 }
 int transferPage(int index, char * filepath, int pageNum){
-  //add locks
-
-
   FILE* fptr = fopen(filepath, "r");
   if (fptr==NULL){
     perror("ERROR Could not open file for reading\n");
@@ -93,8 +92,10 @@ int transferPage(int index, char * filepath, int pageNum){
     int startByte = 1024 * index;
     fseek(fptr, startByte,SEEK_SET);
     //char* = memory[index*1024];
-
+    pthread_mutex_lock(&transferlock);
     fread(memory[index], sizeof(char), 1024, fptr);
+    pthread_mutex_unlock(&transferlock);
+
     puts(memory[index]);
     //save the memory
     //update pagetable
@@ -113,10 +114,12 @@ int writeToClient(int index, int offset, int numBytes, int sock){
   char file_content[numBytes];
   char output[numBytes+100];
   int i;
+  pthread_mutex_lock(&writelock);
   for(i = 0; i < numBytes; i++){
   	file_content[i] = memory[index][offset%1024+i];
   }
   snprintf(output, sizeof(output), "AWK %d\n%s", numBytes, file_content);
+  pthread_mutex_unlock(&writelock);
   write(sock , output , strlen(output));
   printf("[thread %lu] Sent: ACK %d\n",(unsigned long)pthread_self(), numBytes);
   printf("[thread %lu] Transferred %d bytes from offset %d\n",(unsigned long)pthread_self(), numBytes, offset);
