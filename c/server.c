@@ -73,11 +73,13 @@ int findLeastRecentyUsed (struct page* pageItr){
 }
 int checkForFileInPageTable(struct page* pageTable, char * filename, int pageNum){
   //check if a page exists with same offset
+
+  //-1 means paneNum doesn't matter.
   const int tableSize = 32;
   int i;
   for(i =0; i< tableSize; i++){
     if (!strcmp(pageTable[i].filename,filename)){
-      if(pageNum == pageTable[i].pageNum){
+      if(pageNum == pageTable[i].pageNum || pageNum == -1){
       localtime(&pageTable[i].lastEdited);
       return i;
     }
@@ -95,8 +97,8 @@ int transferPage(int index, char * filepath, char * filename, int frame, int pag
     fseek(fptr, startByte,SEEK_SET);
 
     pthread_mutex_lock(&transferlock);
+    printf("pageLoc0 %d\n",index);
     fread(memory[index], sizeof(char), 1024, fptr);
-    pthread_mutex_unlock(&transferlock);
     pageTable[index].pageNum = pageNum;
     char * temp = pageTable[index].filename;
     int i;
@@ -105,6 +107,8 @@ int transferPage(int index, char * filepath, char * filename, int frame, int pag
       temp++;
     }
     *temp = '\0';
+    pthread_mutex_unlock(&transferlock);
+
     puts(pageTable[index].filename);
     printf("[thread %lu] Allocated page %d to frame %d",(unsigned long)pthread_self(), pageNum, frame);
     if (replacedPage > -1)
@@ -312,11 +316,8 @@ void *connection_handler(void *socket_desc)
           strcat(file_path, ".storage/");
           strcat(file_path, file_name);
 		      FILE * file = fopen(file_path, "r");
-          //read function
-          //add locks
-          //wrote this when super tired need to recheck work
 		  if( access( file_path, F_OK ) == -1 ) {
-            // file exists
+            // file doesnt exists
             puts(file_path);
 			      printf("[thread %lu] Sent: ERROR NO SUCH FILE\n",(unsigned long)pthread_self());
             write(sock , "Error: NO SUCH FILE\n" , strlen("Error: NO SUCH FILE\n"));
@@ -335,7 +336,7 @@ void *connection_handler(void *socket_desc)
 			if(firstPageSize > readLength){
 				firstPageSize = readLength;
 			}
-			struct page* frame[4];
+			int frame[4];
 			int index;
       int initialOffset = byteOffset;
       int pageNum = byteOffset / 1024;
@@ -351,7 +352,7 @@ void *connection_handler(void *socket_desc)
 			}
 			else{
         pageLoc = findLeastRecentyUsed(pageTable);
-        frame[0] = &pageTable[pageLoc];
+        frame[0] = pageLoc;
         intemp[0] = pageNum;
         transferPage(pageLoc, file_path, file_name, 0, pageNum, -1);
         localtime(&pageTable[pageLoc].lastEdited);
@@ -383,11 +384,11 @@ void *connection_handler(void *socket_desc)
           else{
             if (index < 4){
               pageLoc = findLeastRecentyUsed(pageTable);
-              frame[index] = &pageTable[pageLoc];
+              frame[index] = pageLoc;
               transferPage(pageLoc, file_path, file_name, index, pageNum, -1);
             }
             else{
-            //pageLoc = index % 4;
+            pageLoc = frame[index%4];
             transferPage(pageLoc, file_path, file_name, index % 4, pageNum, intemp[index%4]);
             }
 
@@ -407,17 +408,47 @@ void *connection_handler(void *socket_desc)
 
 		}
 		else if(!strcmp(dest,"DELETE")){
-		  puts("Received DELETE");
-			  //if it exists
-				//add flock
-				//search all of pagetable for it.
-				//unallocate any with it
-				//lock them before you unallocate them.
-				//delete the actual file
+		    puts("Received DELETE");
+        char file_name [100];
+        int pos = 7;
+        int f_pos = 0;
+        while(temp[pos] != ' '){
+          file_name[f_pos] = temp[pos];
+          //putchar(file_name[f_pos]);
+          f_pos++;
+          pos++;
+        }
+        char file_path[1000];
+        memset(file_path,0,9);
+        strcat(file_path, ".storage/");
+        strcat(file_path, file_name);
+        if( access( file_path, F_OK ) == -1 ) {
+              // file doesnt exists
+              puts(file_path);
+  			      printf("[thread %lu] Sent: ERROR NO SUCH FILE\n",(unsigned long)pthread_self());
+              write(sock , "Error: NO SUCH FILE\n" , strlen("Error: NO SUCH FILE\n"));
+              perror("Error: NO SUCH FILE\n");
 
-			  //else
-				//printf("ERROR: File doesn't exist\n");
-				//returnwhat
+            }
+  		  else{
+          FILE * fptr = fopen(file_path, "w");
+
+          flock(fileno(fptr), LOCK_EX);
+          int pageLoc = checkForFileInPageTable(pageTable, file_name,-1);
+          while(pageLoc != -1){
+            pthread_mutex_lock(&transferlock);
+
+            pageTable[pageLoc].pageNum = -1;
+            char * temp = pageTable[pageLoc].filename;
+            *temp = '\0';
+            printf("Deallocated frame %d\n",pageLoc);
+            pthread_mutex_unlock(&transferlock);
+          }
+          fclose(fptr);
+  				//delete the actual file
+          flock(fileno(fptr), LOCK_UN);
+        }
+
 		  }
 		else{
 		  printf("contents %s\n", temp);
