@@ -46,7 +46,7 @@ struct page {
   time_t lastEdited;
 };
 
-
+time_t old;
 //declare memory array here(32 slots with 1024 bits)
   // allocate 32,768 with calloc
   //then turn into array of char of that size
@@ -97,7 +97,7 @@ int transferPage(int index, char * filepath, char * filename, int frame, int pag
     fseek(fptr, startByte,SEEK_SET);
 
     pthread_mutex_lock(&transferlock);
-    printf("pageLoc0 %d\n",index);
+    //printf("pageLoc0 %d\n",index);
     fread(memory[index], sizeof(char), 1024, fptr);
     pageTable[index].pageNum = pageNum;
     char * temp = pageTable[index].filename;
@@ -109,7 +109,7 @@ int transferPage(int index, char * filepath, char * filename, int frame, int pag
     *temp = '\0';
     pthread_mutex_unlock(&transferlock);
 
-    puts(pageTable[index].filename);
+    //puts(pageTable[index].filename);
     printf("[thread %lu] Allocated page %d to frame %d",(unsigned long)pthread_self(), pageNum, frame);
     if (replacedPage > -1)
       printf("(replaced page %d)",replacedPage);
@@ -214,8 +214,8 @@ void *connection_handler(void *socket_desc)
             b_pos++;
             pos++;
           }
-          printf("f_pos %d\n", f_pos);
-          printf("b_pos %d\n", b_pos);
+          //printf("f_pos %d\n", f_pos);
+          //printf("b_pos %d\n", b_pos);
           file_name[f_pos] = '\0';
           bytes_size[b_pos] = '\0';
 
@@ -258,7 +258,7 @@ void *connection_handler(void *socket_desc)
                   itr++;
                 }
                 fread(file_line, sizeof(char), (numBytes % BUFFER_SIZE) / sizeof(char), command);
-                printf("%s\n",file_line);
+                //printf("%s\n",file_line);
                 fwrite(file_line, sizeof(char), (numBytes % BUFFER_SIZE)/ sizeof(char), fptr);
               }
               fclose(fptr);
@@ -303,9 +303,9 @@ void *connection_handler(void *socket_desc)
             l_pos++;
             pos++;
           }
-          printf("f_pos %d\n", f_pos);
-          printf("b_pos %d\n", b_pos);
-          printf("l_pos %d\n", l_pos);
+          //printf("f_pos %d\n", f_pos);
+          //printf("b_pos %d\n", b_pos);
+          //printf("l_pos %d\n", l_pos);
 
           file_name[f_pos] = '\0';
           bytes_size[b_pos] = '\0';
@@ -344,11 +344,9 @@ void *connection_handler(void *socket_desc)
       int pageLoc = checkForFileInPageTable(pageTable, file_name,pageNum);
       int intemp[4];
 			if(pageLoc != -1){
-        puts("I found you, miss new boo");
         //use preexisting page if possible to write to beginning bytes
         localtime(&pageTable[pageLoc].lastEdited);
         index = 0;
-        printf("pageloc: %d\n",pageLoc);
         writeToClient(pageLoc, byteOffset, firstPageSize, sock);
         byteOffset += firstPageSize;
 			}
@@ -366,7 +364,7 @@ void *connection_handler(void *socket_desc)
         int bytesToWrite = 1024;
         int bytesRead = byteOffset - initialOffset;
         while(bytesRead < readLength){
-          printf("%d\n",bytesRead);
+          //printf("%d\n",bytesRead);
           if (1024 > readLength - bytesRead){
             bytesToWrite = readLength - bytesRead;
           }
@@ -376,10 +374,8 @@ void *connection_handler(void *socket_desc)
           pageNum = byteOffset / 1024;
           pageLoc = checkForFileInPageTable(pageTable, file_name, pageNum);
           if(pageLoc != -1){
-            puts("I found you, miss new boo");
             //use preexisting page if possible to write to beginning bytes
             localtime(&pageTable[pageLoc].lastEdited);
-            printf("pageloc2: %d\n",pageLoc);
             writeToClient(pageLoc, byteOffset, bytesToWrite, sock);
             bytesRead += bytesToWrite;
             byteOffset += bytesToWrite;
@@ -397,7 +393,6 @@ void *connection_handler(void *socket_desc)
 
           intemp[index] = pageNum;
           localtime(&pageTable[pageLoc].lastEdited);
-          printf("pageloc3: %d\n",pageLoc);
           writeToClient(pageLoc, byteOffset, bytesToWrite, sock);
           byteOffset += bytesToWrite;
           bytesRead += bytesToWrite;
@@ -422,7 +417,7 @@ void *connection_handler(void *socket_desc)
           pos++;
         }
 		//puts("before strcat");
-        char file_path[1000] = ""; 
+        char file_path[1000] = "";
         strcat(file_path, ".storage/");
         strcat(file_path, file_name);
 		file_path[9+f_pos] = '\0';
@@ -449,7 +444,8 @@ void *connection_handler(void *socket_desc)
             pageTable[pageLoc].pageNum = -1;
             char * temp = pageTable[pageLoc].filename;
             *temp = '\0';
-            printf("Deallocated frame %d\n",pageLoc);
+            pageTable[pageLoc].lastEdited = old;
+            printf("[thread %lu] Deallocated frame %d\n",(unsigned long)pthread_self(), pageLoc);
             pthread_mutex_unlock(&transferlock);
 			pageLoc = checkForFileInPageTable(pageTable, file_name,-1);
           }
@@ -502,7 +498,7 @@ int main(int argc , char *argv[])
 	}
 
   //char memory = calloc(32,1024);
-
+  localtime(&old);
 	int socket_desc , client_sock, c;
 	struct sockaddr_in server, client;
 	socket_desc = socket(AF_INET, SOCK_STREAM, 0);
