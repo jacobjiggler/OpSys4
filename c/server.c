@@ -102,7 +102,7 @@ int transferPage(int index, char * filepath, char * filename, int frame, int pag
     pageTable[index].pageNum = pageNum;
     char * temp = pageTable[index].filename;
     int i;
-    for (i = 0; i < sizeof(filename);i++){
+    for (i = 0; i < sizeof(filename)+1;i++){
       *temp = filename[i];
       temp++;
     }
@@ -114,6 +114,7 @@ int transferPage(int index, char * filepath, char * filename, int frame, int pag
     if (replacedPage > -1)
       printf("(replaced page %d)",replacedPage);
     printf("\n");
+	fclose(fptr);
     return index;
   }
   //remove locks
@@ -406,6 +407,7 @@ void *connection_handler(void *socket_desc)
 
           }
 		  flock(fileno(file), LOCK_UN);
+		  fclose(file);
 		  }
 
 		}
@@ -414,19 +416,22 @@ void *connection_handler(void *socket_desc)
         char file_name [100];
         int pos = 7;
         int f_pos = 0;
-        while(temp[pos] != ' '){
+        while(temp[pos] != '\n'){
           file_name[f_pos] = temp[pos];
           f_pos++;
           pos++;
         }
-        char file_path[1000];
-        memset(file_path,0,9);
+		//puts("before strcat");
+        char file_path[1000] = ""; 
         strcat(file_path, ".storage/");
         strcat(file_path, file_name);
-        puts(file_path);
-        if( access( file_path, F_OK ) != -1 ) {
+		file_path[9+f_pos] = '\0';
+		//puts("after strcat");
+		//printf("%d\n",f_pos);
+		//puts(file_path);
+        if( access( file_path, F_OK ) == -1 ) {
               // file doesnt exists
-              puts("asdf");
+              //puts("asdf");
   			      printf("[thread %lu] Sent: ERROR NO SUCH FILE\n",(unsigned long)pthread_self());
               write(sock , "Error: NO SUCH FILE\n" , strlen("Error: NO SUCH FILE\n"));
               perror("Error: NO SUCH FILE\n");
@@ -434,7 +439,10 @@ void *connection_handler(void *socket_desc)
             }
   		  else{
           //maybe add flock here while deleting it.
+		  file_name[f_pos] = '\0';
+		  //puts(file_name);
           int pageLoc = checkForFileInPageTable(pageTable, file_name,-1);
+		  printf("page loc %d\n",pageLoc);
           while(pageLoc != -1){
             pthread_mutex_lock(&transferlock);
 
@@ -443,9 +451,10 @@ void *connection_handler(void *socket_desc)
             *temp = '\0';
             printf("Deallocated frame %d\n",pageLoc);
             pthread_mutex_unlock(&transferlock);
+			pageLoc = checkForFileInPageTable(pageTable, file_name,-1);
           }
 
-  				//delete the actual file
+  		  //delete the actual file
           int status = remove(file_path);
 
          if( status == 0 ){
