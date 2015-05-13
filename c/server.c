@@ -40,7 +40,7 @@ pthread_mutex_t writelock;
 
 //struct to hold page info
 struct page {
-  char filename[1000];
+  char filename[100];
   int pageNum;
   //Will hold the number in which it was edited
   time_t lastEdited;
@@ -97,24 +97,15 @@ int transferPage(int index, char * filepath, char * filename, int frame, int pag
     pthread_mutex_lock(&transferlock);
     fread(memory[index], sizeof(char), 1024, fptr);
     pthread_mutex_unlock(&transferlock);
-    //update pagetable
-    puts("test3");
     pageTable[index].pageNum = pageNum;
-    puts("test4");
-    //memset(pageTable[index].filename,0,100);
-    puts("test5");
-    strncpy(pageTable[index].filename, filename, 1000);
-    pageTable[index].filename[0] = '\0';
-    //pageTable[index].filename = filename;
     char * temp = pageTable[index].filename;
     int i;
     for (i = 0; i < sizeof(filename);i++){
-      temp[i] = filename[i];
+      *temp = filename[i];
+      temp++;
     }
-    pageTable[index].filename[sizeof(filename)] = '\0';
-
-    //strcat(temp, filename);
-    puts("test6");
+    *temp = '\0';
+    puts(pageTable[index].filename);
     printf("[thread %lu] Allocated page %d to frame %d",(unsigned long)pthread_self(), pageNum, frame);
     if (replacedPage > -1)
       printf("(replaced page %d)",replacedPage);
@@ -339,7 +330,6 @@ void *connection_handler(void *socket_desc)
 			}
 			struct stat st;
 			stat(file_path, &st);
-			int size = st.st_size;
 			int difference = byteOffset % 1024;
 			int firstPageSize = 1024 - difference;
 			if(firstPageSize > readLength){
@@ -365,7 +355,7 @@ void *connection_handler(void *socket_desc)
         intemp[0] = pageNum;
         transferPage(pageLoc, file_path, file_name, 0, pageNum, -1);
         localtime(&pageTable[pageLoc].lastEdited);
-        printf("pageloc: %d\n",pageLoc);
+        printf("pageloc1: %d\n",pageLoc);
         writeToClient(pageLoc, byteOffset, firstPageSize, sock);
         byteOffset += firstPageSize;
         index = 1;
@@ -385,7 +375,7 @@ void *connection_handler(void *socket_desc)
           if(pageLoc != -1){
             //use preexisting page if possible to write to beginning bytes
             localtime(&pageTable[pageLoc].lastEdited);
-            printf("pageloc: %d\n",pageLoc);
+            printf("pageloc2: %d\n",pageLoc);
             writeToClient(pageLoc, byteOffset, bytesToWrite, sock);
             bytesRead += bytesToWrite;
             byteOffset += bytesToWrite;
@@ -397,13 +387,13 @@ void *connection_handler(void *socket_desc)
               transferPage(pageLoc, file_path, file_name, index, pageNum, -1);
             }
             else{
-            puts("test");
+            //pageLoc = index % 4;
             transferPage(pageLoc, file_path, file_name, index % 4, pageNum, intemp[index%4]);
-            puts("test2");
             }
+
           intemp[index] = pageNum;
           localtime(&pageTable[pageLoc].lastEdited);
-          printf("pageloc: %d\n",pageLoc);
+          printf("pageloc3: %d\n",pageLoc);
           writeToClient(pageLoc, byteOffset, bytesToWrite, sock);
           byteOffset += bytesToWrite;
           bytesRead += bytesToWrite;
