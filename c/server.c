@@ -118,6 +118,7 @@ int writeToClient(int index, int offset, int numBytes, int sock){
   }
   snprintf(output, sizeof(output), "AWK %d\n%s", numBytes, file_content);
   write(sock , output , strlen(output));
+  printf("[thread %lu] Sent: ACK %d\n",(unsigned long)pthread_self(), numBytes);
 
   return -1;
 }
@@ -139,10 +140,9 @@ void *connection_handler(void *socket_desc)
     while(1){
       char temp[PATH_MAX + 1];
       if (fgets(temp, PATH_MAX+ 1, command) != NULL){
+        printf("[thread %lu] Rcvd: %s\n",(unsigned long)pthread_self(), temp);
         char *dest;
         dest = strtok(temp, " ");
-        printf("[thread %lu] Rcvd: %s\n",(unsigned long)pthread_self(), temp);
-
 
         if (strcmp(temp, "DIR\n") ==0 || strcmp(temp, "DIR\r\n") ==0){
           printf("Command DIR Recognized\n");
