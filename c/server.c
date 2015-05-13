@@ -71,32 +71,50 @@ int findLeastRecentyUsed (struct page* pageItr){
   }
   return oldestIndex;
 }
-int checkForFileInPageTable(struct page* pageTable, char * filename){
+int checkForFileInPageTable(struct page* pageTable, char * filename, int pageNum){
   //check if a page exists with same offset
   const int tableSize = 32;
   int i;
   for(i =0; i< tableSize; i++){
     if (!strcmp(pageTable[i].filename,filename)){
+      if(pageNum == pageTable[i].pageNum){
       localtime(&pageTable[i].lastEdited);
       return i;
+    }
     }
   }
   return -1;
 }
-int transferPage(int index, char * filepath, int frame, int pageNum, int replacedPage){
+int transferPage(int index, char * filepath, char * filename, int frame, int pageNum, int replacedPage){
   FILE* fptr = fopen(filepath, "r");
   if (fptr==NULL){
     perror("ERROR Could not open file for reading\n");
   }
   else{
-    int startByte = 1024 * index;
+    int startByte = 1024 * pageNum;
     fseek(fptr, startByte,SEEK_SET);
+
     pthread_mutex_lock(&transferlock);
     fread(memory[index], sizeof(char), 1024, fptr);
     pthread_mutex_unlock(&transferlock);
-
-    puts(memory[index]);
     //update pagetable
+    puts("test3");
+    pageTable[index].pageNum = pageNum;
+    puts("test4");
+    //memset(pageTable[index].filename,0,100);
+    puts("test5");
+    strncpy(pageTable[index].filename, filename, 1000);
+    pageTable[index].filename[0] = '\0';
+    //pageTable[index].filename = filename;
+    char * temp = pageTable[index].filename;
+    int i;
+    for (i = 0; i < sizeof(filename);i++){
+      temp[i] = filename[i];
+    }
+    pageTable[index].filename[sizeof(filename)] = '\0';
+
+    //strcat(temp, filename);
+    puts("test6");
     printf("[thread %lu] Allocated page %d to frame %d",(unsigned long)pthread_self(), pageNum, frame);
     if (replacedPage > -1)
       printf("(replaced page %d)",replacedPage);
@@ -108,9 +126,6 @@ int transferPage(int index, char * filepath, int frame, int pageNum, int replace
 }
 
 int writeToClient(int index, int offset, int numBytes, int sock){
-  //lock
-  //code
-  //print stuff;
 
   char file_content[numBytes];
   char output[numBytes+100];
@@ -330,78 +345,73 @@ void *connection_handler(void *socket_desc)
 			if(firstPageSize > readLength){
 				firstPageSize = readLength;
 			}
-      int bytesWritten;
 			struct page* frame[4];
 			int index;
+      int initialOffset = byteOffset;
       int pageNum = byteOffset / 1024;
-      int pageLoc = checkForFileInPageTable(pageTable, file_name);
+      int pageLoc = checkForFileInPageTable(pageTable, file_name,pageNum);
+      int intemp[4];
 			if(pageLoc != -1){
         //use preexisting page if possible to write to beginning bytes
         localtime(&pageTable[pageLoc].lastEdited);
         index = 0;
+        printf("pageloc: %d\n",pageLoc);
         writeToClient(pageLoc, byteOffset, firstPageSize, sock);
+        byteOffset += firstPageSize;
 			}
 			else{
         pageLoc = findLeastRecentyUsed(pageTable);
         frame[0] = &pageTable[pageLoc];
-        transferPage(pageLoc, file_path, 0, pageNum, -1);
+        intemp[0] = pageNum;
+        transferPage(pageLoc, file_path, file_name, 0, pageNum, -1);
         localtime(&pageTable[pageLoc].lastEdited);
+        printf("pageloc: %d\n",pageLoc);
         writeToClient(pageLoc, byteOffset, firstPageSize, sock);
+        byteOffset += firstPageSize;
         index = 1;
 }
+        int bytesToWrite = 1024;
+        int bytesRead = byteOffset - initialOffset;
+        while(bytesRead < readLength){
+          printf("%d\n",bytesRead);
+          if (1024 > readLength - bytesRead){
+            bytesToWrite = readLength - bytesRead;
+          }
+          else{
+            bytesToWrite = 1024;
+          }
+          pageNum = byteOffset / 1024;
+          pageLoc = checkForFileInPageTable(pageTable, file_name, pageNum);
+          if(pageLoc != -1){
+            //use preexisting page if possible to write to beginning bytes
+            localtime(&pageTable[pageLoc].lastEdited);
+            printf("pageloc: %d\n",pageLoc);
+            writeToClient(pageLoc, byteOffset, bytesToWrite, sock);
+            bytesRead += bytesToWrite;
+            byteOffset += bytesToWrite;
+          }
+          else{
+            if (index < 4){
+              pageLoc = findLeastRecentyUsed(pageTable);
+              frame[index] = &pageTable[pageLoc];
+              transferPage(pageLoc, file_path, file_name, index, pageNum, -1);
+            }
+            else{
+            puts("test");
+            transferPage(pageLoc, file_path, file_name, index % 4, pageNum, intemp[index%4]);
+            puts("test2");
+            }
+          intemp[index] = pageNum;
+          localtime(&pageTable[pageLoc].lastEdited);
+          printf("pageloc: %d\n",pageLoc);
+          writeToClient(pageLoc, byteOffset, bytesToWrite, sock);
+          byteOffset += bytesToWrite;
+          bytesRead += bytesToWrite;
+          index++;
 
-          //check if exists
-          //if it doesnt
-            //[thread 134559232] Sent: ERROR NO SUCH FILE
-          //if it does
-            //multilock with read only
-            //get filesize
-            //difference = offset % 1024
-            //firstPageSize = 1024 - difference
-            //if firstPageSize > length
-              //firstPageSize = length
-            //struct page* pages[4];
-            //int index
-            //use preexisting page if possible to write beginning bytes
-              //update last edited
-              //index = 0
-              //write message of last FirstPageSize bytes to client(needs a bunch of code between these 2 lines)
-              //print stuff
-            //else
-              //update last edited
-              //do page check and set page[0] then write bytes
-              //pages[0] = right page
-              //index = 1;
-              //strcpy the whole 1024 bytes into memory
-              //write message of last FirstPageSize bytes to client(needs a bunch of code between these 2 lines)
-              //print stuff
+    }
 
-
-
-            //byteOffset = byteOffset + firstPageSize
-            //bytesRead = firstPageSize
-            //while(index < 4 && bytesRead < length){
-              //check if 1024 > (length - bytesRead)
-              //if it is{
-                //bytesToWrite = length - bytesRead
-              //else
-                //bytesToWrite = 1024
-              //check if in preexisting page and use that if you can
-                //update bytesRead and offset
-                //print stuff
-              //else
-                //if index < 4
-                  //do page check and assign new page
-                  //pages[index%4] = right page
-                //else
-                  //rewrite page already in pages
-                //strcpy those bytes into memory
-                //write message of those bytes to client
-                //update bytesRead
-                //updateoffset
-                //print stuff
-                //index++
-            //}
+          }
 		  flock(fileno(file), LOCK_UN);
 		  }
 
