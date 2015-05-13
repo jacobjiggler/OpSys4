@@ -119,7 +119,7 @@ int writeToClient(int index, int offset, int numBytes, int sock){
   snprintf(output, sizeof(output), "AWK %d\n%s", numBytes, file_content);
   write(sock , output , strlen(output));
   printf("[thread %lu] Sent: ACK %d\n",(unsigned long)pthread_self(), numBytes);
-
+  printf("[thread %lu] Transferred %d bytes from offset %d\n",(unsigned long)pthread_self(), numBytes, offset);
   return -1;
 }
 
